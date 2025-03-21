@@ -110,10 +110,9 @@ const getReportDetails = entry => {
 		break;
 	}
 
-	const md5 = payload?.md5_hash;
 	return {
 		service: proto,
-		comment: `${comment}${md5 ? `\n\n[MD5: ${md5}]` : ''}`,
+		comment: comment,
 		category,
 		timestamp: entry?.['@timestamp'],
 	};
