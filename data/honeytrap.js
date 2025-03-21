@@ -69,6 +69,11 @@ const getReportDetails = entry => {
 		comment = `Honeypot [${SERVER_ID}]: Empty payload on port ${port} (likely service probe)`;
 		break;
 
+	case payloadLen > 1000:
+		category = '14,15';
+		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on port ${port}`;
+		break;
+
 	case (/^1603/).test(hex):
 		category = '14'; // TLS handshake
 		comment = `Honeypot [${SERVER_ID}]: TLS handshake on port ${port} (likely service probe)`;
@@ -99,13 +104,8 @@ const getReportDetails = entry => {
 		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on port ${port} — possible command injection`;
 		break;
 
-	case payloadLen > 1000:
-		category = '14,15';
-		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on port ${port}`;
-		break;
-
 	default:
-		category = '14,15'; // Port Scan, Possible Exploit
+		category = '14,15';
 		comment = `Honeypot [${SERVER_ID}]: Unclassified ${proto} traffic on port ${port}`;
 		break;
 	}
