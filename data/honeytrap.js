@@ -105,7 +105,7 @@ const getReportDetails = entry => {
 		break;
 
 	default:
-		category = '14,15';
+		category = '14';
 		comment = `Honeypot [${SERVER_ID}]: Unclassified ${proto} traffic on port ${port}`;
 		break;
 	}
