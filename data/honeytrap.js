@@ -8,59 +8,59 @@ const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 const LOG_FILE = path.resolve(HONEYTRAP_LOG_FILE);
 let fileOffset = 0;
 
-const headerOrder = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
-const capitalizeHeader = h => h.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('-');
+const HEADER_PRIORITY = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
+const capitalizeHeader = header => header.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('-');
 
 const parseHttpRequest = (hex, port) => {
 	const raw = Buffer.from(hex, 'hex').toString('utf8');
 	const lines = raw.replace(/\r\n|\r/g, '\n').trim().split('\n');
 
 	const requestLineRaw = lines.shift()?.trim() || '';
-	const proto = requestLineRaw.match(/HTTP\/[0-9.]+/i)?.[0]?.toUpperCase() || 'HTTP';
+	const protocol = requestLineRaw.match(/HTTP\/[0-9.]+/i)?.[0]?.toUpperCase() || 'HTTP';
 	const requestLine = requestLineRaw.replace(/\s*HTTP\/[0-9.]+$/i, '');
 
 	const headers = {};
 	const body = [];
+	let parsingBody = false;
 
-	let inBody = false;
 	for (const line of lines) {
-		if (inBody) {
+		if (parsingBody) {
 			body.push(line);
 			continue;
 		}
 		if (!line.trim()) {
-			inBody = true;
+			parsingBody = true;
 			continue;
 		}
-		const [k, ...v] = line.split(':');
-		if (v.length) {
-			const key = k.trim().toLowerCase();
-			if (key !== 'host') headers[key] = v.join(':').trim();
+		const [key, ...value] = line.split(':');
+		if (value.length && key.toLowerCase() !== 'host') {
+			headers[key.trim().toLowerCase()] = value.join(':').trim();
 		}
 	}
 
-	const shownHeaders = headerOrder
+	const formattedHeaders = HEADER_PRIORITY
 		.filter(h => headers[h])
 		.map(h => `${capitalizeHeader(h)}: ${headers[h]}`)
 		.join('\n');
 
-	let out = `Honeypot [${SERVER_ID}]: ${proto} request on ${port}\n\n${requestLine}`;
-	if (shownHeaders) out += `\n${shownHeaders}`;
+	let output = `Honeypot [${SERVER_ID}]: ${protocol} request on ${port}\n\n${requestLine}`;
+	if (formattedHeaders) output += `\n${formattedHeaders}`;
+
 	if (requestLineRaw.startsWith('POST')) {
 		const bodyContent = body.join('\n').trim();
-		if (bodyContent) out += `\nPOST Data: ${bodyContent}`;
+		if (bodyContent) output += `\nPOST Data: ${bodyContent}`;
 	}
-	return out;
+
+	return output;
 };
 
 const getReportDetails = entry => {
 	const attack = entry?.attack_connection;
 	const port = attack?.local_port;
 	const proto = (attack?.protocol || 'unknown').toUpperCase();
-	const payload = attack?.payload;
-	const payloadLen = payload?.length || 0;
-	const hex = payload?.data_hex || '';
+	const hex = attack?.payload?.data_hex || '';
 	const ascii = Buffer.from(hex, 'hex').toString('utf8').replace(/\s+/g, ' ').toLowerCase();
+	const payloadLen = attack?.payload?.length || 0;
 
 	let category, comment;
 	switch (true) {
@@ -69,38 +69,38 @@ const getReportDetails = entry => {
 		comment = `Honeypot [${SERVER_ID}]: Empty payload on port ${port} (likely service probe)`;
 		break;
 
-	case (/^1603/i).test(hex):
-		category = '14'; // TLS handshake = likely probe
+	case (/^1603/).test(hex):
+		category = '14'; // TLS handshake
 		comment = `Honeypot [${SERVER_ID}]: TLS handshake on port ${port} (likely service probe)`;
 		break;
 
-	case (/^(474554|504f5354|48545450)/i).test(hex):
+	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii): // HTTP/Version
 		category = '21';
 		comment = parseHttpRequest(hex, port);
 		break;
 
-	case port === 11211 || ascii.includes('stats'):
-		category = '14'; // Memcached scan/probe
+	case port === 11211: case ascii.includes('stats'):
+		category = '14';
 		comment = `Honeypot [${SERVER_ID}]: Memcached command on port ${port}`;
 		break;
 
-	case (/^(535348)/i).test(hex) || ascii.includes('ssh'):
-		category = '14,18'; // Port Scan, Brute-Force
+	case ascii.includes('ssh'):
+		category = '14,18';
 		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on port ${port}`;
 		break;
 
-	case (/^(4d47534e)/i).test(hex) || ascii.includes('mgmt'):
-		category = '14,23'; // Port Scan, IoT Targeted
+	case ascii.includes('mgmt'):
+		category = '14,23';
 		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on port ${port}`;
 		break;
 
-	case ascii.match(/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/):
-		category = '15'; // Possible Exploit
+	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
+		category = '15';
 		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on port ${port} — possible command injection`;
 		break;
 
 	case payloadLen > 1000:
-		category = '14,15'; // Port Scan, Hacking / fuzzing
+		category = '14,15';
 		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on port ${port}`;
 		break;
 
@@ -112,7 +112,7 @@ const getReportDetails = entry => {
 
 	return {
 		service: proto,
-		comment: comment,
+		comment,
 		category,
 		timestamp: entry?.['@timestamp'],
 	};

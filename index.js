@@ -4,7 +4,7 @@
 //
 
 const log = require('./utils/log.js');
-const { reportedIPs, loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
+const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
 const axios = require('./services/axios.js');
 const { refreshServerIPs, getServerIPs } = require('./services/ipFetcher.js');
 const config = require('./config.js');
@@ -16,27 +16,9 @@ const { ABUSEIPDB_API_KEY, SERVER_ID, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE,
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
 	if (!srcIp) return log(2, `${honeypot} -> Missing source IP (srcIp)`);
-	if (getServerIPs().includes(srcIp)) return log(0, `Ignoring own IP: ${srcIp}`);
+	if (getServerIPs().includes(srcIp)) return log(0, `${honeypot} -> Ignoring own IP`);
 
-	if (isIPReportedRecently(srcIp)) {
-		const lastReportedTime = reportedIPs.get(srcIp);
-		const elapsedTime = Math.floor(Date.now() / 1000 - lastReportedTime);
-
-		const days = Math.floor(elapsedTime / 86400);
-		const hours = Math.floor((elapsedTime % 86400) / 3600);
-		const minutes = Math.floor((elapsedTime % 3600) / 60);
-		const seconds = elapsedTime % 60;
-
-		const timeAgo = [
-			days && `${days}d`,
-			hours && `${hours}h`,
-			minutes && `${minutes}m`,
-			(seconds || !days && !hours && !minutes) && `${seconds}s`,
-		].filter(Boolean).join(' ');
-
-		log(0, `${srcIp} was last reported on ${new Date(lastReportedTime * 1000).toLocaleString()} (${timeAgo} ago)`);
-		return;
-	}
+	if (isIPReportedRecently(srcIp)) return;
 
 	try {
 		const { data: res } = await axios.post('https://api.abuseipdb.com/api/v2/report', new URLSearchParams({
