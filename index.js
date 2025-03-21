@@ -46,7 +46,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			timestamp: formatTimestamp(timestamp || new Date().toISOString()),
 		}), { headers: { Key: ABUSEIPDB_API_KEY } });
 
-		log(0, `${honeypot} -> Reported ${srcIp}; ${dpt}/${service}; Abuse: ${res.data.abuseConfidenceScore}%; ${comment}`);
+		log(0, `${honeypot} -> Reported ${srcIp} [${dpt}/${service}]; Categories: ${categories}; (abuse: ${res.data.abuseConfidenceScore}%`);
 		markIPAsReported(srcIp);
 		saveReportedIPs();
 		return true;
