@@ -1,7 +1,7 @@
 exports.MAIN = {
 	// My Server
 	DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
-	HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/honeytrap.json',
+	HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json',
 	CACHE_FILE: '/tmp/tpot-abuseipdb-reporter.cache',
 	SERVER_ID: null, // The server name that will be visible in the reports (e.g., 'homeserver1'). If you don't want to define it, leave the value as null.
 	IP_REFRESH_SCHEDULE: '0 */6 * * *', // CRON: How often should the script check the IP address assigned by the ISP to prevent accidental self-reporting? Default: every 6 hours
