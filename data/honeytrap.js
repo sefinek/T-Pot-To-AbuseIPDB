@@ -66,17 +66,17 @@ const getReportDetails = entry => {
 	switch (true) {
 	case payloadLen === 0:
 		category = '14'; // Port Scan
-		comment = `Honeypot [${SERVER_ID}]: Empty payload on port ${port} (likely service probe)`;
+		comment = `Honeypot [${SERVER_ID}]: Empty payload on ${port}/${proto.toLowerCase()} (likely service probe)`;
 		break;
 
 	case payloadLen > 1000:
 		category = '14,15';
-		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case (/^1603/).test(hex):
 		category = '14'; // TLS handshake
-		comment = `Honeypot [${SERVER_ID}]: TLS handshake on port ${port} (likely service probe)`;
+		comment = `Honeypot [${SERVER_ID}]: TLS handshake on ${port}/${proto.toLowerCase()} (likely service probe)`;
 		break;
 
 	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii): // HTTP/Version
@@ -86,22 +86,22 @@ const getReportDetails = entry => {
 
 	case port === 11211: case ascii.includes('stats'):
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Memcached command on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Memcached command on p${port}/${proto.toLowerCase()}`;
 		break;
 
 	case ascii.includes('ssh'):
 		category = '14,18';
-		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case ascii.includes('mgmt'):
 		category = '14,23';
-		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
 		category = '15';
-		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on port ${port} — possible command injection`;
+		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on ${port}/${proto.toLowerCase()} — possible command injection`;
 		break;
 
 	default:
