@@ -21,7 +21,8 @@
     "axios": "^1.8.4",
     "chokidar": "^4.0.3",
     "cron": "^4.1.0",
-    "ipaddr.js": "^2.2.0"
+    "ipaddr.js": "^2.2.0",
+    "simple-git": "^3.27.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
