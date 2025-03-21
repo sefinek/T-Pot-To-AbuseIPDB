@@ -13,41 +13,43 @@ const capitalizeHeader = h => h.split('-').map(part => part.charAt(0).toUpperCas
 
 const parseHttpRequest = (hex, port) => {
 	const raw = Buffer.from(hex, 'hex').toString('utf8');
-	const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+	const lines = raw.replace(/\r\n|\r/g, '\n').trim().split('\n');
 
-	const requestLine = lines.shift()?.trim() || '';
+	const requestLineRaw = lines.shift()?.trim() || '';
+	const proto = requestLineRaw.match(/HTTP\/[0-9.]+/i)?.[0]?.toUpperCase() || 'HTTP';
+	const requestLine = requestLineRaw.replace(/\s*HTTP\/[0-9.]+$/i, '');
+
 	const headers = {};
 	const body = [];
 
-	let isBody = false;
+	let inBody = false;
 	for (const line of lines) {
-		if (isBody) {
+		if (inBody) {
 			body.push(line);
 			continue;
 		}
 		if (!line.trim()) {
-			isBody = true;
+			inBody = true;
 			continue;
 		}
 		const [k, ...v] = line.split(':');
-		if (!v.length) continue;
-		const key = k.trim().toLowerCase();
-		if (key === 'host') continue;
-		headers[key] = v.join(':').trim();
+		if (v.length) {
+			const key = k.trim().toLowerCase();
+			if (key !== 'host') headers[key] = v.join(':').trim();
+		}
 	}
 
-	const proto = requestLine.match(/HTTP\/[0-9.]+/i)?.[0]?.toUpperCase() || 'HTTP';
-	const head = headerOrder
+	const shownHeaders = headerOrder
 		.filter(h => headers[h])
-		.map(h => `${capitalizeHeader(h)}: ${headers[h]}`);
+		.map(h => `${capitalizeHeader(h)}: ${headers[h]}`)
+		.join('\n');
 
 	let out = `Honeypot (${SERVER_ID}): ${proto} request on ${port}\n\n${requestLine}`;
-	if (head.length) out += `\n${head.join('\n')}`;
-	if (requestLine.startsWith('POST')) {
-		const data = body.join('\n').trim();
-		if (data) out += `\nPOST Data: ${data}`;
+	if (shownHeaders) out += `\n${shownHeaders}`;
+	if (requestLineRaw.startsWith('POST')) {
+		const bodyContent = body.join('\n').trim();
+		if (bodyContent) out += `\nPOST Data: ${bodyContent}`;
 	}
-
 	return out;
 };
 
