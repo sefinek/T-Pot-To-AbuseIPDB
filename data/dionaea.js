@@ -8,61 +8,62 @@ const { DIONAEA_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 const LOG_FILE = path.resolve(DIONAEA_LOG_FILE);
 let fileOffset = 0;
 
-const getReportDetails = (entry, dpt) => {
-	const protocol = entry?.connection?.protocol || 'unknown';
+const getReportDetails = entry => {
+	const port = entry?.dst_port;
+	const proto = entry?.connection?.protocol || 'unknown';
 	const timestamp = entry?.timestamp || new Date().toISOString();
 
 	let category, comment;
-	switch (protocol) {
+	switch (proto) {
 	case 'mssqld': {
 		const username = entry?.credentials?.username?.[0];
 		const password = entry?.credentials?.password?.[0];
 
-		category = '18'; // Brute-Force
+		category = '18';
 		if (username && !password) {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL brute-force with username '${username}' and empty password`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL ${port}/${proto} brute-force with username '${username}' and empty password`;
 		} else if (username && password) {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL brute-force with credentials '${username}:${password}'`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL ${port}/${proto} brute-force with credentials '${username}:${password}'`;
 		} else {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL connection attempt without credentials`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL ${port}/${proto} connection attempt without credentials`;
 		}
 		break;
 	}
 	case 'httpd':
-		category = '14,21'; // Web App Attack
-		comment = `Honeypot [${SERVER_ID}]: HTTP connection on port ${dpt}, potential web application scan`;
+		category = '14,21';
+		comment = `Honeypot [${SERVER_ID}]: HTTP connection on ${port}/${proto}, potential web application scan`;
 		break;
 	case 'ftp':
-		category = '5'; // FTP Brute-Force
-		comment = `Honeypot [${SERVER_ID}]: FTP brute-force attempt on port ${dpt}`;
+		category = '5';
+		comment = `Honeypot [${SERVER_ID}]: FTP brute-force attempt on ${port}/${proto}`;
 		break;
 	case 'smbd':
-		category = '21'; // Web App Attack
-		comment = `Honeypot [${SERVER_ID}]: SMB access attempt or enumeration on port ${dpt}`;
+		category = '21';
+		comment = `Honeypot [${SERVER_ID}]: SMB access attempt or enumeration on ${port}/${proto}`;
 		break;
 	case 'mysql':
-		category = '18'; // Brute-Force
-		comment = `Honeypot [${SERVER_ID}]: MySQL brute-force login attempt on port ${dpt}`;
+		category = '18';
+		comment = `Honeypot [${SERVER_ID}]: MySQL brute-force login attempt on ${port}/${proto}`;
 		break;
 	case 'tftp':
-		category = '20'; // Exploited Host
-		comment = `Honeypot [${SERVER_ID}]: TFTP access, possibly malicious file transfer on port ${dpt}`;
+		category = '20';
+		comment = `Honeypot [${SERVER_ID}]: TFTP access, possibly malicious file transfer on ${port}/${proto}`;
 		break;
 	case 'upnp':
-		category = '14'; // Port Scan
-		comment = `Honeypot [${SERVER_ID}]: UPnP device scan or enumeration attempt on port ${dpt}`;
+		category = '14';
+		comment = `Honeypot [${SERVER_ID}]: UPnP device scan or enumeration attempt on ${port}/${proto}`;
 		break;
 	case 'mqtt':
-		category = '14,23'; // Port Scan, IoT Targeted
-		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
+		category = '14,23';
+		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on ${port}/${proto}`;
 		break;
 	default: {
-		category = '14,15'; // Port Scan, Possible Exploit
-		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
+		category = '14';
+		comment = `Honeypot [${SERVER_ID}]: Unclassified ${proto} traffic on port ${port}`;
 	}
 	}
 
-	return { service: protocol.toUpperCase(), comment, category, timestamp };
+	return { service: proto.toUpperCase(), comment, category, timestamp };
 };
 
 module.exports = report => {
@@ -91,7 +92,7 @@ module.exports = report => {
 				const dpt = entry?.dst_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, category, comment } = getReportDetails(entry, dpt);
+				const { service, timestamp, category, comment } = getReportDetails(entry);
 				await report('DIONAEA', { srcIp, dpt, service, timestamp }, category, comment);
 			} catch (err) {
 				log(2, `DIONAEA -> Invalid JSON in the log: ${err.message}`);
