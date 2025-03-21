@@ -20,45 +20,45 @@ const getReportDetails = (entry, dpt) => {
 
 		category = '18'; // Brute-Force
 		if (username && !password) {
-			comment = `Honeypot (${SERVER_ID}): MSSQL brute-force with username '${username}' and empty password`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL brute-force with username '${username}' and empty password`;
 		} else if (username && password) {
-			comment = `Honeypot (${SERVER_ID}): MSSQL brute-force with credentials '${username}:${password}'`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL brute-force with credentials '${username}:${password}'`;
 		} else {
-			comment = `Honeypot (${SERVER_ID}): MSSQL connection attempt without credentials`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL connection attempt without credentials`;
 		}
 		break;
 	}
 	case 'httpd':
 		category = '21'; // Web App Attack
-		comment = `Honeypot (${SERVER_ID}): HTTP connection on port ${dpt}, potential web application scan`;
+		comment = `Honeypot [${SERVER_ID}]: HTTP connection on port ${dpt}, potential web application scan`;
 		break;
 	case 'ftp':
 		category = '5'; // FTP Brute-Force
-		comment = `Honeypot (${SERVER_ID}): FTP brute-force attempt on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: FTP brute-force attempt on port ${dpt}`;
 		break;
 	case 'smbd':
 		category = '21'; // Web App Attack
-		comment = `Honeypot (${SERVER_ID}): SMB access attempt or enumeration on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: SMB access attempt or enumeration on port ${dpt}`;
 		break;
 	case 'mysql':
 		category = '18'; // Brute-Force
-		comment = `Honeypot (${SERVER_ID}): MySQL brute-force login attempt on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: MySQL brute-force login attempt on port ${dpt}`;
 		break;
 	case 'tftp':
 		category = '20'; // Exploited Host
-		comment = `Honeypot (${SERVER_ID}): TFTP access, possibly malicious file transfer on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: TFTP access, possibly malicious file transfer on port ${dpt}`;
 		break;
 	case 'upnp':
 		category = '14'; // Port Scan
-		comment = `Honeypot (${SERVER_ID}): UPnP device scan or enumeration attempt on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: UPnP device scan or enumeration attempt on port ${dpt}`;
 		break;
 	case 'mqtt':
 		category = '23'; // IoT Targeted
-		comment = `Honeypot (${SERVER_ID}): MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
 		break;
 	default: {
 		category = '15'; // Default
-		comment = `Honeypot (${SERVER_ID}): MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
 	}
 	}
 

@@ -44,7 +44,7 @@ const parseHttpRequest = (hex, port) => {
 		.map(h => `${capitalizeHeader(h)}: ${headers[h]}`)
 		.join('\n');
 
-	let out = `Honeypot (${SERVER_ID}): ${proto} request on ${port}\n\n${requestLine}`;
+	let out = `Honeypot [${SERVER_ID}]: ${proto} request on ${port}\n\n${requestLine}`;
 	if (shownHeaders) out += `\n${shownHeaders}`;
 	if (requestLineRaw.startsWith('POST')) {
 		const bodyContent = body.join('\n').trim();
@@ -66,12 +66,12 @@ const getReportDetails = entry => {
 	switch (true) {
 	case payloadLen === 0:
 		category = '14'; // Port Scan
-		comment = `Honeypot (${SERVER_ID}): empty payload on port ${port} (likely service probe)`;
+		comment = `Honeypot [${SERVER_ID}]: Empty payload on port ${port} (likely service probe)`;
 		break;
 
 	case (/^1603/i).test(hex):
 		category = '14'; // TLS handshake = likely probe
-		comment = `Honeypot (${SERVER_ID}): TLS handshake on port ${port} (likely service probe)`;
+		comment = `Honeypot [${SERVER_ID}]: TLS handshake on port ${port} (likely service probe)`;
 		break;
 
 	case (/^(474554|504f5354|48545450)/i).test(hex):
@@ -81,32 +81,32 @@ const getReportDetails = entry => {
 
 	case port === 11211 || ascii.includes('stats'):
 		category = '14'; // Memcached scan/probe
-		comment = `Honeypot (${SERVER_ID}): Memcached command on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Memcached command on port ${port}`;
 		break;
 
 	case (/^(535348)/i).test(hex) || ascii.includes('ssh'):
 		category = '18'; // Brute-Force
-		comment = `Honeypot (${SERVER_ID}): SSH handshake/banner on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on port ${port}`;
 		break;
 
 	case (/^(4d47534e)/i).test(hex) || ascii.includes('mgmt'):
 		category = '23'; // IoT Targeted
-		comment = `Honeypot (${SERVER_ID}): MGMT/IoT-specific traffic on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on port ${port}`;
 		break;
 
 	case ascii.match(/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/):
 		category = '15'; // Possible Exploit
-		comment = `Honeypot (${SERVER_ID}): suspicious payload on port ${port} — possible command injection`;
+		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on port ${port} — possible command injection`;
 		break;
 
 	case payloadLen > 1000:
 		category = '15'; // Hacking / fuzzing
-		comment = `Honeypot (${SERVER_ID}): large payload (${payloadLen} bytes) on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on port ${port}`;
 		break;
 
 	default:
 		category = '15'; // Default
-		comment = `Honeypot (${SERVER_ID}): unclassified ${proto} traffic on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Unclassified ${proto} traffic on port ${port}`;
 		break;
 	}
 
