@@ -29,7 +29,7 @@ const getReportDetails = (entry, dpt) => {
 		break;
 	}
 	case 'httpd':
-		category = '21'; // Web App Attack
+		category = '14,21'; // Web App Attack
 		comment = `Honeypot [${SERVER_ID}]: HTTP connection on port ${dpt}, potential web application scan`;
 		break;
 	case 'ftp':
@@ -53,11 +53,11 @@ const getReportDetails = (entry, dpt) => {
 		comment = `Honeypot [${SERVER_ID}]: UPnP device scan or enumeration attempt on port ${dpt}`;
 		break;
 	case 'mqtt':
-		category = '23'; // IoT Targeted
+		category = '14,23'; // Port Scan, IoT Targeted
 		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
 		break;
 	default: {
-		category = '15'; // Default
+		category = '14,15'; // Port Scan, Possible Exploit
 		comment = `Honeypot [${SERVER_ID}]: MQTT connection attempt, likely targeting IoT device on port ${dpt}`;
 	}
 	}

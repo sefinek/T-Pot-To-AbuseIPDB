@@ -85,12 +85,12 @@ const getReportDetails = entry => {
 		break;
 
 	case (/^(535348)/i).test(hex) || ascii.includes('ssh'):
-		category = '18'; // Brute-Force
+		category = '14,18'; // Port Scan, Brute-Force
 		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on port ${port}`;
 		break;
 
 	case (/^(4d47534e)/i).test(hex) || ascii.includes('mgmt'):
-		category = '23'; // IoT Targeted
+		category = '14,23'; // Port Scan, IoT Targeted
 		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on port ${port}`;
 		break;
 
@@ -100,12 +100,12 @@ const getReportDetails = entry => {
 		break;
 
 	case payloadLen > 1000:
-		category = '15'; // Hacking / fuzzing
+		category = '14,15'; // Port Scan, Hacking / fuzzing
 		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on port ${port}`;
 		break;
 
 	default:
-		category = '15'; // Default
+		category = '14,15'; // Port Scan, Possible Exploit
 		comment = `Honeypot [${SERVER_ID}]: Unclassified ${proto} traffic on port ${port}`;
 		break;
 	}
