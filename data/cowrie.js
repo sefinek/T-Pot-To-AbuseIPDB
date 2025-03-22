@@ -89,12 +89,8 @@ const processCowrieLogLine = async (line, report) => {
 		break;
 
 	case 'cowrie.login.success':
-		if (entry.username || entry.password) {
-			session.successfulLogins.push({ username: entry.username, password: entry.password });
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successful login => ${entry.username}:${entry.password}`);
-		} else {
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successfully connected`);
-		}
+		if (entry.username || entry.password) session.successfulLogins.push({ username: entry.username, password: entry.password });
+		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successful connected => ${entry.username}:${entry.password}`);
 		break;
 
 	case 'cowrie.client.version':
@@ -103,10 +99,8 @@ const processCowrieLogLine = async (line, report) => {
 		break;
 
 	case 'cowrie.login.failed':
-		if (entry.username || entry.password) {
-			session.failedLogins.push({ username: entry.username, password: entry.password });
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
-		}
+		if (entry.username || entry.password) session.failedLogins.push({ username: entry.username, password: entry.password });
+		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
 		break;
 
 	case 'cowrie.command.input':
