@@ -8,8 +8,7 @@ const { DIONAEA_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 const LOG_FILE = path.resolve(DIONAEA_LOG_FILE);
 let fileOffset = 0;
 
-const getReportDetails = entry => {
-	const port = entry?.dst_port;
+const getReportDetails = (entry, dpt) => {
 	const proto = entry?.connection?.protocol || 'unknown';
 	const timestamp = entry?.timestamp || new Date().toISOString();
 
@@ -21,45 +20,45 @@ const getReportDetails = entry => {
 
 		category = '18';
 		if (username && !password) {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${port}) with username \`${username}\` and empty password`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) with username \`${username}\` and empty password`;
 		} else if (username && password) {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${port}) with credentials \`${username}:${password}\``;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) with credentials \`${username}:${password}\``;
 		} else {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${port}) without login credentials`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) without login credentials`;
 		}
 		break;
 	}
 	case 'httpd':
 		category = '21';
-		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on ${dpt}`;
 		break;
 	case 'ftp':
 		category = '5,18';
-		comment = `Honeypot [${SERVER_ID}]: FTP traffic detected on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: FTP traffic detected on ${dpt}`;
 		break;
 	case 'smbd':
 		category = '21';
-		comment = `Honeypot [${SERVER_ID}]: SMB traffic observed on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: SMB traffic observed on ${dpt}`;
 		break;
 	case 'mysql':
 		category = '18';
-		comment = `Honeypot [${SERVER_ID}]: MySQL-related traffic detected on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: MySQL-related traffic detected on ${dpt}`;
 		break;
 	case 'tftp':
 		category = '20';
-		comment = `Honeypot [${SERVER_ID}]: TFTP protocol traffic on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: TFTP protocol traffic on ${dpt}`;
 		break;
 	case 'upnp':
 		category = '23';
-		comment = `Honeypot [${SERVER_ID}]: UPnP traffic detected on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: UPnP traffic detected on ${dpt}`;
 		break;
 	case 'mqtt':
 		category = '23';
-		comment = `Honeypot [${SERVER_ID}]: MQTT protocol traffic on ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: MQTT protocol traffic on ${dpt}`;
 		break;
 	default: {
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${port}/${proto}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${dpt}/${proto}`;
 	}
 	}
 
@@ -83,13 +82,21 @@ module.exports = report => {
 
 		const rl = readline.createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
 		rl.on('line', async line => {
+			let entry;
 			try {
-				const entry = JSON.parse(line);
+				entry = JSON.parse(line);
+			} catch (err) {
+				log(2, `COWRIE -> JSON parse error: ${err.message}`);
+				log(2, `COWRIE -> Faulty line: ${JSON.stringify(line)}`);
+				return;
+			}
+
+			try {
 				const srcIp = entry?.src_ip;
 				const dpt = entry?.dst_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, category, comment } = getReportDetails(entry);
+				const { service, timestamp, category, comment } = getReportDetails(entry, dpt);
 				await report('DIONAEA', { srcIp, dpt, service, timestamp }, category, comment);
 			} catch (err) {
 				log(2, `DIONAEA -> ${err.message}`);

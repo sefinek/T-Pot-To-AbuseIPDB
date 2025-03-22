@@ -52,16 +52,7 @@ const flushSession = async (sessionId, report) => {
 	sessions.delete(sessionId);
 };
 
-const processCowrieLogLine = async (line, report) => {
-	let entry;
-
-	try {
-		entry = JSON.parse(line);
-	} catch (err) {
-		log(2, `COWRIE -> JSON parse error: ${err.message} (${line})`);
-		return;
-	}
-
+const processCowrieLogLine = async (entry, report) => {
 	const ip = entry?.src_ip;
 	const sessionId = entry?.session;
 	const { eventid } = entry;
@@ -144,8 +135,17 @@ module.exports = report => {
 
 		const rl = readline.createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
 		rl.on('line', async line => {
+			let entry;
 			try {
-				await processCowrieLogLine(line, report);
+				entry = JSON.parse(line);
+			} catch (err) {
+				log(2, `COWRIE -> JSON parse error: ${err.message}`);
+				log(2, `COWRIE -> Faulty line: ${JSON.stringify(line)}`);
+				return;
+			}
+
+			try {
+				await processCowrieLogLine(entry, report);
 			} catch (err) {
 				log(2, `COWRIE -> ${err.message}`);
 			}
