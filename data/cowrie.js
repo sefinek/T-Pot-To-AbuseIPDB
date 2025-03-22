@@ -79,7 +79,7 @@ const processCowrieLogLine = async (line, report) => {
 		sessions.set(ip, session);
 	}
 
-	session.timestamp = entry.timestamp || session.timestamp;
+	session.timestamp = entry.timestamp;
 
 	switch (eventid) {
 	case 'cowrie.session.connect':
