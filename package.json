@@ -15,9 +15,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "sync": "git pull --recurse-submodules",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "up": "ncu -u && npm install && npm update && npm audit fix",
-    "sync": "git pull --recurse-submodules"
+    "up": "ncu -u && npm install && npm update && npm audit fix"
   },
   "dependencies": {
     "axios": "^1.8.4",
