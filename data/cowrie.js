@@ -9,7 +9,7 @@ const LOG_FILE = path.resolve(COWRIE_LOG_FILE);
 let fileOffset = 0;
 
 const sessions = new Map();
-const FLUSH_INTERVAL = 30 * 1000;
+const FLUSH_INTERVAL = SERVER_ID === 'development' ? 30 * 1000 : 5 * 60 * 1000;
 
 const flushSession = async (ip, report) => {
 	const session = sessions.get(ip);
@@ -19,27 +19,28 @@ const flushSession = async (ip, report) => {
 
 	if (!session.srcIp || !session.port || !session.proto) {
 		sessions.delete(ip);
-		log(1, `COWRIE -> Incomplete session for ${ip}, discarded`);
-		return;
+		return log(1, `COWRIE -> Incomplete session for ${ip}, discarded`);
 	}
 
 	let category = '14';
-	let comment = `Honeypot [${SERVER_ID}]: ${session.proto.toUpperCase()} brute-force from ${session.srcIp} to port ${session.port}; `;
+	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto} brute-force;`;
 
-	if (session.sshVersion) comment += `SSH version: ${session.sshVersion}; `;
+	if (session.sshVersion) comment += ` SSH version: ${session.sshVersion};`;
 
 	if (session.failedLogins.length > 0) {
 		category += ',18';
 		if (session.proto === 'ssh') category += ',22';
 		if (session.proto === 'telnet') category += ',23';
+	}
 
-		const creds = session.failedLogins.map(entry => `'${entry.username}:${entry.password}'`).join(', ');
-		comment += `Failed logins: ${creds}; `;
+	const loginAttempts = session.failedLogins.length + session.successfulLogins.length;
+	if (loginAttempts > 0) {
+		comment += ` Logins: ${loginAttempts} attempts;`;
 	}
 
 	if (session.commands.length > 0) {
 		category += ',15';
-		comment += `Commands executed (${session.commands.length}); `;
+		comment += ` Commands executed (${session.commands.length});`;
 	}
 
 	await report('COWRIE', {
@@ -63,27 +64,29 @@ const processCowrieLogLine = async (line, report) => {
 	}
 
 	const ip = entry?.src_ip;
-	if (!ip || !entry.eventid) {
+	const { eventid } = entry;
+	if (!ip || !eventid) {
 		log(1, 'COWRIE -> Skipped: missing src_ip or eventid');
 		return;
 	}
 
 	let session = sessions.get(ip);
 	if (!session) {
-		if (!entry.dst_port || !entry.protocol) {
+		const { dst_port, protocol } = entry;
+		if (!dst_port || !protocol) {
 			log(1, `COWRIE -> Skipped: missing dst_port or protocol for IP ${ip}`);
 			return;
 		}
 
 		session = {
 			srcIp: ip,
-			port: entry.dst_port,
-			proto: entry.protocol,
+			port: dst_port,
+			proto: protocol,
 			timestamp: entry.timestamp,
 			failedLogins: [],
+			successfulLogins: [],
 			commands: [],
 			sshVersion: null,
-			hassh: null,
 			timer: setTimeout(() => flushSession(ip, report), FLUSH_INTERVAL),
 		};
 		sessions.set(ip, session);
@@ -91,7 +94,7 @@ const processCowrieLogLine = async (line, report) => {
 
 	session.timestamp = entry.timestamp || session.timestamp;
 
-	switch (entry.eventid) {
+	switch (eventid) {
 	case 'cowrie.session.connect':
 		session.port = entry.dst_port || session.port;
 		session.proto = entry.protocol || session.proto;
@@ -100,21 +103,16 @@ const processCowrieLogLine = async (line, report) => {
 
 	case 'cowrie.login.success':
 		if (entry.username || entry.password) {
-			session.failedLogins.push({ username: entry.username, password: entry.password });
-			log(1, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
+			session.successfulLogins.push({ username: entry.username, password: entry.password });
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successful login => ${entry.username}:${entry.password}`);
+		} else {
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successfully connected`);
 		}
-
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successfully connected`);
 		break;
 
 	case 'cowrie.client.version':
 		session.sshVersion = entry.version;
 		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH version => ${entry.version}`);
-		break;
-
-	case 'cowrie.client.kex':
-		session.hassh = entry.hassh;
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH fingerprint => ${entry.hassh}`);
 		break;
 
 	case 'cowrie.login.failed':
