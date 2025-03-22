@@ -78,12 +78,11 @@ const processCowrieLogLine = async (entry, report) => {
 		if (session) {
 			session.port = entry.dst_port;
 			session.proto = entry.protocol;
-			log(0, `COWRIE -> ${ip}: Connect (${session.port}/${session.proto})`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Connect`);
 		}
 		break;
 
-	case 'cowrie.login.success':
-	case 'cowrie.login.failed':
+	case 'cowrie.login.success': case 'cowrie.login.failed':
 		if (session && (entry.username || entry.password)) {
 			session.credentials.set(`${entry.username}:${entry.password}`, true);
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
