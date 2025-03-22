@@ -23,18 +23,16 @@ const flushSession = async (sessionId, report) => {
 	}
 
 	const loginAttempts = session.credentials.size;
-	const categories = ['15']; // Hacking
-	if (loginAttempts > 1) categories.push('18'); // Brute-Force
+	const categories = ['15'];
+	if (loginAttempts > 1) categories.push('18');
+	if (session.proto === 'ssh') categories.push('22');
+	if (session.proto === 'telnet') categories.push('23');
+	if (session.commands.length > 0) categories.push('20');
 
-	if (session.proto === 'ssh') {
-		categories.push('22'); // SSH abuse
-	} else if (session.proto === 'telnet') {
-		categories.push('23'); // IoT Targeted
-	}
+	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto}`;
+	if (loginAttempts > 1) comment += ' brute-force';
+	comment += ';';
 
-	if (session.commands.length > 0) categories.push('20'); // Exploited host
-
-	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto}` + (loginAttempts > 1 ? ' brute-force' : '') + ';';
 	if (session.sshVersion) comment += ` SSH version: ${session.sshVersion};`;
 	if (loginAttempts > 0) {
 		comment += ` Logins: ${loginAttempts} attempts;`;
