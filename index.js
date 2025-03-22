@@ -14,7 +14,35 @@ const formatTimestamp = require('./utils/formatTimestamp.js');
 
 const { ABUSEIPDB_API_KEY, SERVER_ID, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
+let abuseIPDBRateLimited = false;
+let rateLimitReset = (() => {
+	const now = new Date();
+	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
+})();
+let lastRateLimitLog = 0;
+const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000; // 10 minut
+
+const checkRateLimit = () => {
+	const now = Date.now();
+	if (abuseIPDBRateLimited) {
+		if (now >= rateLimitReset.getTime()) {
+			abuseIPDBRateLimited = false;
+			const current = new Date();
+			rateLimitReset = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1, 0, 1));
+			log(0, `Rate limit state reset. Next reset at ${rateLimitReset.toISOString()}`);
+		} else if (now - lastRateLimitLog >= RATE_LIMIT_LOG_INTERVAL) {
+			const minutesLeft = Math.ceil((rateLimitReset.getTime() - now) / 60000);
+			log(0, `AbuseIPDB rate limit active. Waiting for reset at ${rateLimitReset.toISOString()} (in ${minutesLeft} min)`);
+			lastRateLimitLog = now;
+		}
+	}
+
+	return abuseIPDBRateLimited;
+};
+
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
+	if (checkRateLimit()) return false;
+
 	if (!srcIp) return log(2, `${honeypot} -> Missing source IP (srcIp)`);
 	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
@@ -32,8 +60,18 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 		saveReportedIPs();
 		return true;
 	} catch (err) {
-		const details = JSON.stringify(err.response?.data?.errors || err.response?.data || err.message);
-		log(2, `${honeypot} -> Failed to report ${srcIp} [${dpt}/${service}]; ${err.message}\n${details}`);
+		if (err.response?.status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
+			if (!abuseIPDBRateLimited) {
+				abuseIPDBRateLimited = true;
+				lastRateLimitLog = Date.now();
+				const now = new Date();
+				rateLimitReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
+				log(1, `Daily rate limit reached for AbuseIPDB! Blocking reports until ${rateLimitReset.toISOString()}`);
+			}
+		} else {
+			const details = JSON.stringify(err.response?.data?.errors || err.response?.data || err.message);
+			log(2, `${honeypot} -> Failed to report ${srcIp} [${dpt}/${service}]; ${err.message}\n${details}`);
+		}
 		return false;
 	}
 };
