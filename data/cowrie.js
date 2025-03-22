@@ -61,10 +61,7 @@ const processCowrieLogLine = async (line, report) => {
 
 	const ip = entry?.src_ip;
 	const { eventid } = entry;
-	if (!ip || !eventid) {
-		log(1, 'COWRIE -> Skipped: missing src_ip or eventid');
-		return;
-	}
+	if (!ip || !eventid) return log(1, 'COWRIE -> Skipped: missing src_ip or eventid');
 
 	let session = sessions.get(ip);
 	if (!session) {
@@ -108,7 +105,7 @@ const processCowrieLogLine = async (line, report) => {
 	case 'cowrie.login.failed':
 		if (entry.username || entry.password) {
 			session.failedLogins.push({ username: entry.username, password: entry.password });
-			log(1, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
 		}
 		break;
 
