@@ -11,15 +11,15 @@ let fileOffset = 0;
 const sessions = new Map();
 const FLUSH_INTERVAL = SERVER_ID === 'development' ? 30 * 1000 : 5 * 60 * 1000;
 
-const flushSession = async (ip, report) => {
-	const session = sessions.get(ip);
+const flushSession = async (sessionId, report) => {
+	const session = sessions.get(sessionId);
 	if (!session) return;
 
 	clearTimeout(session.timer);
 
 	if (!session.srcIp || !session.port || !session.proto) {
-		sessions.delete(ip);
-		return log(1, `COWRIE -> Incomplete session for ${ip}, discarded`);
+		sessions.delete(sessionId);
+		return log(1, `COWRIE -> Incomplete session for ${session.srcIp}, discarded`);
 	}
 
 	const loginAttempts = session.credentials.size;
@@ -49,7 +49,7 @@ const flushSession = async (ip, report) => {
 		timestamp: session.timestamp,
 	}, categories.join(','), comment.trim());
 
-	sessions.delete(ip);
+	sessions.delete(sessionId);
 };
 
 const processCowrieLogLine = async (line, report) => {
@@ -63,11 +63,12 @@ const processCowrieLogLine = async (line, report) => {
 	}
 
 	const ip = entry?.src_ip;
+	const sessionId = entry?.session;
 	const { eventid } = entry;
-	if (!ip || !eventid) return log(1, 'COWRIE -> Skipped: missing src_ip or eventid');
+	if (!ip || !eventid || !sessionId) return log(1, 'COWRIE -> Skipped: missing src_ip, session or eventid');
 
-	let session = sessions.get(ip);
-	if (!session) {
+	let session = sessions.get(sessionId);
+	if (!session && eventid !== 'cowrie.session.closed') {
 		session = {
 			srcIp: ip,
 			port: entry.dst_port,
@@ -76,45 +77,52 @@ const processCowrieLogLine = async (line, report) => {
 			credentials: new Map(),
 			commands: [],
 			sshVersion: null,
-			timer: setTimeout(() => flushSession(ip, report), FLUSH_INTERVAL),
+			timer: setTimeout(() => flushSession(sessionId, report), FLUSH_INTERVAL),
 		};
-		sessions.set(ip, session);
+		sessions.set(sessionId, session);
 	}
 
-	session.timestamp = entry.timestamp;
+	if (session) session.timestamp = entry.timestamp;
 
 	switch (eventid) {
 	case 'cowrie.session.connect':
-		session.port = entry.dst_port;
-		session.proto = entry.protocol;
-		log(0, `COWRIE -> ${ip}: Connect (${session.port}/${session.proto})`);
+		if (session) {
+			session.port = entry.dst_port;
+			session.proto = entry.protocol;
+			log(0, `COWRIE -> ${ip}: Connect (${session.port}/${session.proto})`);
+		}
 		break;
 
 	case 'cowrie.login.success':
-		if (entry.username || entry.password) session.credentials.set(`${entry.username}:${entry.password}`, true);
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Connected => ${entry.username}:${entry.password}`);
+	case 'cowrie.login.failed':
+		if (session && (entry.username || entry.password)) {
+			session.credentials.set(`${entry.username}:${entry.password}`, true);
+			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: ${status} => ${entry.username}:${entry.password}`);
+		}
 		break;
 
 	case 'cowrie.client.version':
-		session.sshVersion = entry.version;
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH version => ${entry.version}`);
-		break;
-
-	case 'cowrie.login.failed':
-		if (entry.username || entry.password) session.credentials.set(`${entry.username}:${entry.password}`, true);
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
+		if (session) {
+			session.sshVersion = entry.version;
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH version => ${entry.version}`);
+		}
 		break;
 
 	case 'cowrie.command.input':
-		if (entry.input) {
+		if (session && entry.input) {
 			session.commands.push(entry.input);
 			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: $ ${entry.input}`);
 		}
 		break;
 
 	case 'cowrie.session.closed':
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Session closed`);
-		await flushSession(ip, report);
+		if (session) {
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Session closed`);
+		} else {
+			log(0, `COWRIE -> ${ip}: Session closed (session not found)`);
+		}
+		await flushSession(sessionId, report);
 		break;
 	}
 };
