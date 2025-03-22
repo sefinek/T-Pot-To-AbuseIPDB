@@ -21,7 +21,7 @@ const getReportDetails = entry => {
 
 		category = '18';
 		if (username && !password) {
-			comment = `Honeypot [${SERVER_ID}]: Detected MSSQL traffic (on port ${port}) with username \`${username}\` and empty password`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${port}) with username \`${username}\` and empty password`;
 		} else if (username && password) {
 			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${port}) with credentials \`${username}:${password}\``;
 		} else {
