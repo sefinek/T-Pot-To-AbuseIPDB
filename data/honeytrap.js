@@ -55,28 +55,27 @@ const parseHttpRequest = (hex, port) => {
 };
 
 const getReportDetails = entry => {
-	const attack = entry?.attack_connection;
-	const port = attack?.local_port;
-	const proto = (attack?.protocol || 'unknown').toUpperCase();
-	const hex = attack?.payload?.data_hex || '';
+	const port = entry?.attack_connection?.local_port;
+	const proto = entry?.attack_connection?.protocol || 'unknown';
+	const hex = entry?.attack_connection?.payload?.data_hex || '';
 	const ascii = Buffer.from(hex, 'hex').toString('utf8').replace(/\s+/g, ' ').toLowerCase();
-	const payloadLen = attack?.payload?.length || 0;
+	const payloadLen = entry?.attack_connection?.payload?.length || 0;
 
 	let category, comment;
 	switch (true) {
 	case payloadLen === 0:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Empty payload on ${port}/${proto.toLowerCase()} (likely service probe)`;
+		comment = `Honeypot [${SERVER_ID}]: Empty payload on ${port}/${proto} (likely service probe)`;
 		break;
 
 	case payloadLen > 1000:
 		category = '15';
-		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on ${port}/${proto}`;
 		break;
 
 	case (/^1603/).test(hex):
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: TLS handshake on ${port}/${proto.toLowerCase()} (likely service probe)`;
+		comment = `Honeypot [${SERVER_ID}]: TLS handshake on ${port}/${proto} (likely service probe)`;
 		break;
 
 	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
@@ -86,37 +85,37 @@ const getReportDetails = entry => {
 
 	case port === 11211: case ascii.includes('stats'):
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Memcached command on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: Memcached command on ${port}/${proto}`;
 		break;
 
 	case port === 23 || port === 2323:
 		category = '14,23';
-		comment = `Honeypot [${SERVER_ID}]: Telnet-based connection attempt on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: Telnet-based connection attempt on ${port}/${proto}`;
 		break;
 
 	case ascii.includes('ssh'):
 		category = '18,22';
-		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on ${port}/${proto}`;
 		break;
 
 	case ascii.includes('mgmt') || ascii.includes('mglndd_'):
 		category = '23';
-		comment = `Honeypot [${SERVER_ID}]: IoT-specific traffic on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: IoT-specific traffic on ${port}/${proto}`;
 		break;
 
 	case ascii.includes('cookie:'):
 		category = '21,15';
-		comment = `Honeypot [${SERVER_ID}]: HTTP header with cookie on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: HTTP header with cookie on ${port}/${proto}`;
 		break;
 
 	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
 		category = '15';
-		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on ${port}/${proto.toLowerCase()} — possible command injection`;
+		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on ${port}/${proto} — possible command injection`;
 		break;
 
 	default:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${proto}/${port.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${proto}/${port.toUpperCase()}`;
 		break;
 	}
 
