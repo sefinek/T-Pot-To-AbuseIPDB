@@ -58,7 +58,7 @@ const processCowrieLogLine = async (line, report) => {
 	try {
 		entry = JSON.parse(line);
 	} catch (err) {
-		log(2, `COWRIE -> JSON parse error: ${err.message}`);
+		log(2, `COWRIE -> JSON parse error: ${err.message} (${line})`);
 		return;
 	}
 
