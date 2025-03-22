@@ -67,7 +67,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 				lastRateLimitLog = Date.now();
 				const now = new Date();
 				rateLimitReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
-				log(1, `Daily rate limit reached for AbuseIPDB! Blocking reports until ${rateLimitReset.toISOString()}`);
+				log(1, `Daily limit reached for AbuseIPDB! Blocking reports until ${rateLimitReset.toISOString()}`);
 			}
 		} else {
 			const details = JSON.stringify(err.response?.data?.errors || err.response?.data || err.message);
