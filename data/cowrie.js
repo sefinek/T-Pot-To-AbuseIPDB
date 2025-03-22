@@ -68,16 +68,10 @@ const processCowrieLogLine = async (line, report) => {
 
 	let session = sessions.get(ip);
 	if (!session) {
-		const { dst_port, protocol } = entry;
-		if (!dst_port || !protocol) {
-			log(1, `COWRIE -> Skipped: missing dst_port or protocol for IP ${ip}`);
-			return;
-		}
-
 		session = {
 			srcIp: ip,
-			port: dst_port,
-			proto: protocol,
+			port: entry.dst_port,
+			proto: entry.protocol,
 			timestamp: entry.timestamp,
 			failedLogins: [],
 			successfulLogins: [],
@@ -92,8 +86,8 @@ const processCowrieLogLine = async (line, report) => {
 
 	switch (eventid) {
 	case 'cowrie.session.connect':
-		session.port = entry.dst_port || session.port;
-		session.proto = entry.protocol || session.proto;
+		session.port = entry.dst_port;
+		session.proto = entry.protocol;
 		log(0, `COWRIE -> ${ip}: Connect (${session.port}/${session.proto})`);
 		break;
 
