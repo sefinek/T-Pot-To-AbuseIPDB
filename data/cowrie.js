@@ -16,25 +16,30 @@ const flushSession = async (ip, report) => {
 	if (!session || !session.srcIp || !session.port) return;
 
 	let category = '14';
-	let comment = `Honeypot [${SERVER_ID}]: ${session.proto} brute-force from ${session.srcIp} to port ${session.port}\n`;
-	if (session.sshVersion) comment += `SSH version: ${session.sshVersion}\n`;
+	let comment = `Honeypot [${SERVER_ID}]: ${session.proto.toUpperCase()} brute-force from ${session.srcIp} to port ${session.port}; `;
+
+	if (session.sshVersion) comment += `SSH version: ${session.sshVersion}; `;
+
 	if (session.failedLogins.length > 0) {
-		category += ',18,22';
+		category += ',18';
+		if (session.proto === 'ssh') category += ',22';
+		if (session.proto === 'telnet') category += ',23';
+
 		const creds = session.failedLogins.map(entry => `'${entry.username}:${entry.password}'`).join(', ');
-		comment += `Failed logins: ${creds}\n`;
+		comment += `Failed logins: ${creds}; `;
 	}
+
 	if (session.commands.length > 0) {
 		category += ',15';
-		comment += `Commands executed (${session.commands.length})\n`;
+		comment += `Commands executed (${session.commands.length}); `;
 	}
-	comment = comment.trim();
 
 	await report('COWRIE', {
 		srcIp: session.srcIp,
 		dpt: session.port,
 		service: session.proto.toUpperCase(),
 		timestamp: session.timestamp,
-	}, category, comment);
+	}, category, comment.trim());
 	sessions.delete(ip);
 };
 
@@ -71,33 +76,38 @@ const processCowrieLogLine = async (line, report) => {
 		case 'cowrie.session.connect':
 			session.port = entry.dst_port;
 			session.proto = entry.protocol;
-			log(0, `COWRIE -> ${ip}: Connect (${session.port}/${session.proto})`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Connect`);
 			break;
 		case 'cowrie.login.success':
-			log(0, `COWRIE -> ${ip}: Successfully connected (${session.port}/${session.proto})`);
+			if (entry.username || entry.password) {
+				session.failedLogins.push({ username: entry.username, password: entry.password });
+				log(1, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
+			}
+
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successfully connected`);
 			break;
 		case 'cowrie.client.version':
 			session.sshVersion = entry.version;
-			log(0, `COWRIE -> ${ip}: SSH version => ${entry.version}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH version => ${entry.version}`);
 			break;
 		case 'cowrie.client.kex':
 			session.hassh = entry.hassh;
-			log(0, `COWRIE -> ${ip}: SSH fingerprint => ${entry.hassh}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH fingerprint => ${entry.hassh}`);
 			break;
 		case 'cowrie.login.failed':
-			if (entry.username && entry.password) {
+			if (entry.username || entry.password) {
 				session.failedLogins.push({ username: entry.username, password: entry.password });
-				log(1, `COWRIE -> ${ip}: Failed login => ${entry.username}:${entry.password}`);
+				log(1, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
 			}
 			break;
 		case 'cowrie.command.input':
 			if (entry.input) {
 				session.commands.push(entry.input);
-				log(0, `COWRIE -> ${ip}: Command input (${session.proto}) => ${entry.input}`);
+				log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: $ ${entry.input}`);
 			}
 			break;
 		case 'cowrie.session.closed':
-			log(0, `COWRIE -> ${ip}: Session closed`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Session closed`);
 			break;
 		}
 	} catch (err) {
