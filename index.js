@@ -16,8 +16,7 @@ const { ABUSEIPDB_API_KEY, SERVER_ID, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE,
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
 	if (!srcIp) return log(2, `${honeypot} -> Missing source IP (srcIp)`);
-	if (getServerIPs().includes(srcIp)) return log(0, `${honeypot} -> Ignoring own IP`);
-
+	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
 
 	try {
