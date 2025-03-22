@@ -22,33 +22,29 @@ const flushSession = async (ip, report) => {
 		return log(1, `COWRIE -> Incomplete session for ${ip}, discarded`);
 	}
 
-	let category = '14';
-	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto} brute-force;`;
-
-	if (session.sshVersion) comment += ` SSH version: ${session.sshVersion};`;
-
-	if (session.failedLogins.length > 0) {
-		category += ',18';
-		if (session.proto === 'ssh') category += ',22';
-		if (session.proto === 'telnet') category += ',23';
-	}
-
 	const loginAttempts = session.failedLogins.length + session.successfulLogins.length;
-	if (loginAttempts > 0) {
-		comment += ` Logins: ${loginAttempts} attempts;`;
+	const categories = ['15']; // Hacking
+	if (loginAttempts > 1) categories.push('18'); // Brute-Force
+
+	if (session.proto === 'ssh') {
+		categories.push('22'); // SSH abuse
+	} else if (session.proto === 'telnet') {
+		categories.push('23'); // IoT Targeted
 	}
 
-	if (session.commands.length > 0) {
-		category += ',15';
-		comment += ` Commands executed (${session.commands.length});`;
-	}
+	if (session.commands.length > 0) categories.push('20'); // Exploited host
+
+	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto}` + (loginAttempts > 1 ? ' brute-force' : '') + ';';
+	if (session.sshVersion) comment += ` SSH version: ${session.sshVersion};`;
+	if (loginAttempts > 0) comment += ` Logins: ${loginAttempts} attempts;`;
+	if (session.commands.length > 0) comment += ` Commands executed (${session.commands.length});`;
 
 	await report('COWRIE', {
 		srcIp: session.srcIp,
 		dpt: session.port,
 		service: session.proto.toUpperCase(),
 		timestamp: session.timestamp,
-	}, category, comment.trim());
+	}, categories.join(','), comment.trim());
 
 	sessions.delete(ip);
 };
