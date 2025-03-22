@@ -115,7 +115,7 @@ const getReportDetails = entry => {
 
 	default:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${proto}/${port.toUpperCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${proto}/${port}`;
 		break;
 	}
 
