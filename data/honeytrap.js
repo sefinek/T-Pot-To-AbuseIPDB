@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const chokidar = require('chokidar');
-const readline = require('node:readline');
+const { createInterface } = require('node:readline');
 const log = require('../utils/log.js');
 const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
@@ -121,7 +121,8 @@ const getReportDetails = (entry, dpt) => {
 	return { service: proto, comment, category, timestamp: entry?.['@timestamp'] };
 };
 
-module.exports = report => {
+module.exports = (report, abuseIPDBRateLimited) => {
+	if (abuseIPDBRateLimited) return;
 	if (!fs.existsSync(LOG_FILE)) {
 		log(2, `HONEYTRAP -> Log file not found: ${LOG_FILE}`);
 		return;
@@ -129,14 +130,20 @@ module.exports = report => {
 
 	fileOffset = fs.statSync(LOG_FILE).size;
 
-	chokidar.watch(LOG_FILE, { persistent: true, ignoreInitial: true }).on('change', file => {
+	chokidar.watch(LOG_FILE, {
+		persistent: true,
+		ignoreInitial: true,
+		awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 },
+		alwaysStat: true,
+		atomic: true,
+	}).on('change', file => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			log(0, 'HONEYTRAP -> Log truncated, offset reset');
+			return log(0, 'HONEYTRAP -> Log truncated, offset reset');
 		}
 
-		const rl = readline.createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
+		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
 		rl.on('line', async line => {
 			let entry;
 			try {
