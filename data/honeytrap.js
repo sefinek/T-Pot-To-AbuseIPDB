@@ -65,37 +65,37 @@ const getReportDetails = entry => {
 	let category, comment;
 	switch (true) {
 	case payloadLen === 0:
-		category = '14'; // Port Scan
+		category = '14';
 		comment = `Honeypot [${SERVER_ID}]: Empty payload on ${port}/${proto.toLowerCase()} (likely service probe)`;
 		break;
 
 	case payloadLen > 1000:
-		category = '14,15';
+		category = '15';
 		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case (/^1603/).test(hex):
-		category = '14'; // TLS handshake
+		category = '14';
 		comment = `Honeypot [${SERVER_ID}]: TLS handshake on ${port}/${proto.toLowerCase()} (likely service probe)`;
 		break;
 
-	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii): // HTTP/Version
+	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
 		category = '21';
 		comment = parseHttpRequest(hex, port);
 		break;
 
 	case port === 11211: case ascii.includes('stats'):
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Memcached command on p${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: Memcached command on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case ascii.includes('ssh'):
-		category = '14,18';
+		category = '18,22';
 		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case ascii.includes('mgmt'):
-		category = '14,23';
+		category = '23';
 		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on ${port}/${proto.toLowerCase()}`;
 		break;
 
@@ -106,7 +106,7 @@ const getReportDetails = entry => {
 
 	default:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unclassified ${proto} traffic on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized ${proto} traffic on port ${port}`;
 		break;
 	}
 
