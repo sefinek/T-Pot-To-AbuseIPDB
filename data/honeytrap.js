@@ -28,14 +28,14 @@ const parseHttpRequest = (hex, port) => {
 			body.push(line);
 			continue;
 		}
+
 		if (!line.trim()) {
 			parsingBody = true;
 			continue;
 		}
+
 		const [key, ...value] = line.split(':');
-		if (value.length && key.toLowerCase() !== 'host') {
-			headers[key.trim().toLowerCase()] = value.join(':').trim();
-		}
+		if (value.length && key.toLowerCase() !== 'host') headers[key.trim().toLowerCase()] = value.join(':').trim();
 	}
 
 	const formattedHeaders = HEADER_PRIORITY
@@ -89,14 +89,24 @@ const getReportDetails = entry => {
 		comment = `Honeypot [${SERVER_ID}]: Memcached command on ${port}/${proto.toLowerCase()}`;
 		break;
 
+	case port === 23 || port === 2323:
+		category = '14,23';
+		comment = `Honeypot [${SERVER_ID}]: Telnet-based connection attempt on ${port}/${proto.toLowerCase()}`;
+		break;
+
 	case ascii.includes('ssh'):
 		category = '18,22';
 		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on ${port}/${proto.toLowerCase()}`;
 		break;
 
-	case ascii.includes('mgmt'):
+	case ascii.includes('mgmt') || ascii.includes('mglndd_'):
 		category = '23';
-		comment = `Honeypot [${SERVER_ID}]: MGMT/IoT-specific traffic on ${port}/${proto.toLowerCase()}`;
+		comment = `Honeypot [${SERVER_ID}]: IoT-specific traffic on ${port}/${proto.toLowerCase()}`;
+		break;
+
+	case ascii.includes('cookie:'):
+		category = '21,15';
+		comment = `Honeypot [${SERVER_ID}]: HTTP header with cookie on ${port}/${proto.toLowerCase()}`;
 		break;
 
 	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
@@ -106,16 +116,11 @@ const getReportDetails = entry => {
 
 	default:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized ${proto} traffic on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${proto}/${port.toLowerCase()}`;
 		break;
 	}
 
-	return {
-		service: proto,
-		comment,
-		category,
-		timestamp: entry?.['@timestamp'],
-	};
+	return { service: proto, comment, category, timestamp: entry?.['@timestamp'] };
 };
 
 module.exports = report => {
@@ -133,10 +138,7 @@ module.exports = report => {
 			log(0, 'HONEYTRAP -> Log truncated, offset reset');
 		}
 
-		const rl = readline.createInterface({
-			input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }),
-		});
-
+		const rl = readline.createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
 		rl.on('line', async line => {
 			try {
 				const entry = JSON.parse(line);
@@ -151,9 +153,7 @@ module.exports = report => {
 			}
 		});
 
-		rl.on('close', () => {
-			fileOffset = stats.size;
-		});
+		rl.on('close', () => fileOffset = stats.size);
 	});
 
 	log(0, '🛡️ HONEYTRAP -> Watcher initialized');

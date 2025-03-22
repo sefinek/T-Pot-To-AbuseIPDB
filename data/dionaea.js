@@ -59,7 +59,7 @@ const getReportDetails = entry => {
 		break;
 	default: {
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized ${proto} traffic on port ${port}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${port}/${proto}`;
 	}
 	}
 
@@ -81,10 +81,7 @@ module.exports = report => {
 			log(0, 'DIONAEA -> Log truncated, offset reset');
 		}
 
-		const rl = readline.createInterface({
-			input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }),
-		});
-
+		const rl = readline.createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
 		rl.on('line', async line => {
 			try {
 				const entry = JSON.parse(line);
