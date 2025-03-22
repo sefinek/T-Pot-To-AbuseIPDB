@@ -148,7 +148,7 @@ module.exports = report => {
 				const { service, timestamp, category, comment } = getReportDetails(entry);
 				await report('HONEYTRAP', { srcIp, dpt, service, timestamp }, category, comment);
 			} catch (err) {
-				log(2, `HONEYTRAP -> Invalid JSON in log: ${err.message}`);
+				log(2, `HONEYTRAP -> ${err.message}`);
 			}
 		});
 

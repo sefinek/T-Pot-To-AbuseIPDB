@@ -92,7 +92,7 @@ module.exports = report => {
 				const { service, timestamp, category, comment } = getReportDetails(entry);
 				await report('DIONAEA', { srcIp, dpt, service, timestamp }, category, comment);
 			} catch (err) {
-				log(2, `DIONAEA -> Invalid JSON in the log: ${err.message}`);
+				log(2, `DIONAEA -> ${err.message}`);
 			}
 		});
 
