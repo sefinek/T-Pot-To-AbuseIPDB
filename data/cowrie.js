@@ -40,7 +40,7 @@ const flushSession = async (sessionId, report) => {
 		comment += ` Logins: ${loginAttempts} attempts;`;
 		comment += ` Credentials: ${[...session.credentials.keys()].join(', ')};`;
 	}
-	if (session.commands.length > 0) comment += ` Commands executed (${session.commands.length});`;
+	if (session.commands.length > 0) comment += ` Commands executed: ${session.commands.length};`;
 
 	await report('COWRIE', {
 		srcIp: session.srcIp,
