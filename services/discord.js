@@ -18,7 +18,7 @@ module.exports = async (id, description) => {
 	if (!DISCORD_WEBHOOKS_ENABLED || !DISCORD_WEBHOOKS_URL) return;
 
 	const logType = TYPES[id];
-	if (!logType) return log(1, 'Invalid log type ID provided!');
+	if (!logType) return log(1, 'Invalid log type ID provided!', true);
 
 	const config = {
 		method: 'POST',
@@ -39,8 +39,8 @@ module.exports = async (id, description) => {
 
 	try {
 		const res = await axios(config);
-		if (res.status !== 204) log(1, 'Failed to deliver Discord Webhook');
+		if (res.status !== 204) log(1, 'Failed to deliver Discord Webhook', true);
 	} catch (err) {
-		log(2, `Failed to send Discord Webhook! ${err.stack}`);
+		log(2, `Failed to send Discord Webhook! ${err.stack}`, true);
 	}
 };

@@ -50,7 +50,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 
 	require('./data/dionaea.js')(reportToAbuseIPDb);
 	require('./data/honeytrap.js')(reportToAbuseIPDb);
-	// require('./data/cowrie.js')(reportToAbuseIPDb);
+	require('./data/cowrie.js')(reportToAbuseIPDb);
 
 	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') await require('./services/updates.js')();
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
