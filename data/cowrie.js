@@ -22,7 +22,7 @@ const flushSession = async (ip, report) => {
 		return log(1, `COWRIE -> Incomplete session for ${ip}, discarded`);
 	}
 
-	const loginAttempts = session.failedLogins.length + session.successfulLogins.length;
+	const loginAttempts = session.credentials.size;
 	const categories = ['15']; // Hacking
 	if (loginAttempts > 1) categories.push('18'); // Brute-Force
 
@@ -36,7 +36,10 @@ const flushSession = async (ip, report) => {
 
 	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto}` + (loginAttempts > 1 ? ' brute-force' : '') + ';';
 	if (session.sshVersion) comment += ` SSH version: ${session.sshVersion};`;
-	if (loginAttempts > 0) comment += ` Logins: ${loginAttempts} attempts;`;
+	if (loginAttempts > 0) {
+		comment += ` Logins: ${loginAttempts} attempts;`;
+		comment += ` Credentials: ${[...session.credentials.keys()].join(', ')};`;
+	}
 	if (session.commands.length > 0) comment += ` Commands executed (${session.commands.length});`;
 
 	await report('COWRIE', {
@@ -70,8 +73,7 @@ const processCowrieLogLine = async (line, report) => {
 			port: entry.dst_port,
 			proto: entry.protocol,
 			timestamp: entry.timestamp,
-			failedLogins: [],
-			successfulLogins: [],
+			credentials: new Map(),
 			commands: [],
 			sshVersion: null,
 			timer: setTimeout(() => flushSession(ip, report), FLUSH_INTERVAL),
@@ -89,8 +91,8 @@ const processCowrieLogLine = async (line, report) => {
 		break;
 
 	case 'cowrie.login.success':
-		if (entry.username || entry.password) session.successfulLogins.push({ username: entry.username, password: entry.password });
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Successful connected => ${entry.username}:${entry.password}`);
+		if (entry.username || entry.password) session.credentials.set(`${entry.username}:${entry.password}`, true);
+		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Connected => ${entry.username}:${entry.password}`);
 		break;
 
 	case 'cowrie.client.version':
@@ -99,7 +101,7 @@ const processCowrieLogLine = async (line, report) => {
 		break;
 
 	case 'cowrie.login.failed':
-		if (entry.username || entry.password) session.failedLogins.push({ username: entry.username, password: entry.password });
+		if (entry.username || entry.password) session.credentials.set(`${entry.username}:${entry.password}`, true);
 		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Failed login => ${entry.username}:${entry.password}`);
 		break;
 
