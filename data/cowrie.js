@@ -57,7 +57,7 @@ const processCowrieLogLine = async (entry, report) => {
 	const ip = entry?.src_ip;
 	const sessionId = entry?.session;
 	const { eventid } = entry;
-	if (!ip || !eventid || !sessionId) return log(1, 'COWRIE -> Skipped: missing src_ip, session or eventid');
+	if (!ip || !eventid || !sessionId) return log(1, 'COWRIE -> Skipped: missing src_ip, eventid or sessionId');
 
 	let session = sessions.get(sessionId);
 	if (!session && eventid !== 'cowrie.session.closed') {
