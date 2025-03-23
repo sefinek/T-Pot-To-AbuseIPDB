@@ -27,7 +27,7 @@ module.exports = async (id, description) => {
 		data: {
 			embeds: [{
 				title: `${logType.emoji} ${SERVER_ID}: ${logType.type} [ID ${id}]`,
-				description: description.replace(/(\b\w+=)/g, '**$1**'),
+				description: description?.replace(/(\b\w+=)/g, '**$1**'),
 				color: logType.color,
 				footer: {
 					text: `${new Date().toLocaleString()} • ${repoFull}`,
