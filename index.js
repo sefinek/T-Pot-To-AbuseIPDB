@@ -71,7 +71,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			}
 		} else {
 			const details = JSON.stringify(err.response?.data?.errors || err.response?.data || err.message);
-			log(2, `${honeypot} -> Failed to report ${srcIp} [${dpt}/${service}]; ${err.message}\n${details}`);
+			log(err.response?.status === 429 ? 2 : 0, `${honeypot} -> Failed to report ${srcIp} [${dpt}/${service}]; ${err.message}\n${details}`);
 		}
 		return false;
 	}
