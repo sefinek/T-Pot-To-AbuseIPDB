@@ -3,6 +3,7 @@ const path = require('node:path');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
 const log = require('../utils/log.js');
+const { getServerIPs } = require('../services/ipFetcher.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(COWRIE_LOG_FILE);
@@ -87,7 +88,9 @@ const processCowrieLogLine = async (entry, report) => {
 
 	case 'cowrie.login.success': case 'cowrie.login.failed':
 		if (session && (entry.username || entry.password)) {
-			session.credentials.set(`${entry.username}:${entry.password}`, true);
+			const myIps = getServerIPs();
+			const ipPattern = new RegExp(myIps.map(i => i.replace(/\./g, '\\.')).join('|'), 'g');
+			session.credentials.set(`${entry.username.replace(ipPattern, '[SOME-IP]')}:${entry.password.replace(ipPattern, '[SOME-IP]')}`, true);
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
 			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: ${status} => ${entry.username}:${entry.password}`);
 		}
