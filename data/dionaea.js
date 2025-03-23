@@ -31,7 +31,7 @@ const getReportDetails = (entry, dpt) => {
 		break;
 	}
 	case 'httpd':
-		categories.push('21', 19);
+		categories.push('21', '19');
 		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on port ${dpt}`;
 		break;
 	case 'ftp':
