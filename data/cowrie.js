@@ -88,9 +88,16 @@ const processCowrieLogLine = async (entry, report) => {
 
 	case 'cowrie.login.success': case 'cowrie.login.failed':
 		if (session && (entry.username || entry.password)) {
-			const myIps = getServerIPs();
-			const ipPattern = new RegExp(myIps.map(i => i.replace(/\./g, '\\.')).join('|'), 'g');
-			session.credentials.set(`${entry.username.replace(ipPattern, '[SOME-IP]')}:${entry.password.replace(ipPattern, '[SOME-IP]')}`, true);
+			const ipPattern = (() => {
+				const ips = getServerIPs();
+				if (!ips.length) return null;
+				const escaped = ips.map(i => i.replace(/[.:\\[\](){}^$*+?|]/g, '\\$&'));
+				return new RegExp(escaped.join('|'), 'g');
+			})();
+
+			const mask = str => ipPattern ? str.replace(ipPattern, '[SOME-IP]') : str;
+			session.credentials.set(`${mask(entry.username)}:${mask(entry.password)}`, true);
+
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
 			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: ${status} => ${entry.username}:${entry.password}`);
 		}
