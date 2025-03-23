@@ -44,7 +44,7 @@ const flushSession = async (sessionId, report) => {
 	}
 
 	if (cmdCount > 0) lines.push(`• ${cmdCount} command(s) were executed during the session`);
-	if (sshVersion) lines.push(`• SSH version: ${sshVersion}`);
+	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
 
 	await report('COWRIE', {
 		srcIp,
