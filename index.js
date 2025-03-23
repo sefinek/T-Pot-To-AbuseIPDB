@@ -20,7 +20,7 @@ let rateLimitReset = (() => {
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
 })();
 let lastRateLimitLog = 0;
-const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000; // 10 minut
+const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
 const checkRateLimit = () => {
 	const now = Date.now();
