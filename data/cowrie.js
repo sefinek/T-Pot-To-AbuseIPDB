@@ -33,15 +33,15 @@ const flushSession = async (sessionId, report) => {
 
 	const lines = [];
 	if (loginAttempts >= 2) {
-		lines.push(`Honeypot [${SERVER_ID}]: Detected a ${proto.toUpperCase()} brute-force attempt on port ${port}`);
-		lines.push(`• Total login attempts: ${loginAttempts}`);
+		lines.push(`Honeypot [${SERVER_ID}]: A ${proto.toUpperCase()} brute-force attack was detected on port ${port}`);
+		lines.push(`• Number of login attempts: ${loginAttempts}`);
 		lines.push(`• Credentials used: ${creds.join(', ')}`);
 	} else {
-		lines.push(`Honeypot [${SERVER_ID}]: Unauthorized ${proto.toUpperCase()} connection attempt on port ${port}`);
+		lines.push(`Honeypot [${SERVER_ID}]: An unauthorized ${proto.toUpperCase()} connection attempt was detected on port ${port}`);
 		if (loginAttempts === 1) lines.push(`• Credential used: ${creds[0]}`);
 	}
 
-	if (cmdCount > 0) lines.push(`• ${cmdCount} commands were executed during the session`);
+	if (cmdCount > 0) lines.push(`• ${cmdCount} command(s) were executed during the session`);
 	if (sshVersion) lines.push(`• SSH version: ${sshVersion}`);
 
 	await report('COWRIE', {
