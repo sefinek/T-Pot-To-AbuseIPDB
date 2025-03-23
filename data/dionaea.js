@@ -106,7 +106,7 @@ module.exports = (report, abuseIPDBRateLimited) => {
 				const { service, timestamp, category, comment } = getReportDetails(entry, dpt);
 				await report('DIONAEA', { srcIp, dpt, service, timestamp }, category, comment);
 			} catch (err) {
-				log(2, `DIONAEA -> ${err.message}`);
+				log(2, err);
 			}
 		});
 

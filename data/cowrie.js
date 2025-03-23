@@ -150,7 +150,7 @@ module.exports = (report, abuseIPDBRateLimited) => {
 			try {
 				await processCowrieLogLine(entry, report);
 			} catch (err) {
-				log(2, `COWRIE -> ${err.message}`);
+				log(2, err);
 			}
 		});
 		rl.on('close', () => fileOffset = stats.size);

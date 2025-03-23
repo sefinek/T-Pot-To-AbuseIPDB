@@ -162,7 +162,7 @@ module.exports = (report, abuseIPDBRateLimited) => {
 				const { service, timestamp, category, comment } = getReportDetails(entry, dpt);
 				await report('HONEYTRAP', { srcIp, dpt, service, timestamp }, category, comment);
 			} catch (err) {
-				log(2, `HONEYTRAP -> ${err.message}`);
+				log(2, err);
 			}
 		});
 
