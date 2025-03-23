@@ -12,57 +12,59 @@ const getReportDetails = (entry, dpt) => {
 	const proto = entry?.connection?.protocol || 'unknown';
 	const timestamp = entry?.timestamp || new Date().toISOString();
 
-	let category, comment;
+	const categories = [];
+	let comment;
 	switch (proto) {
 	case 'mssqld': {
 		const username = entry?.credentials?.username?.[0];
 		const password = entry?.credentials?.password?.[0];
-
-		category = '18';
 		if (username && !password) {
+			categories.push('18');
 			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) with username \`${username}\` and empty password`;
 		} else if (username && password) {
+			categories.push('18');
 			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) with credentials \`${username}:${password}\``;
 		} else {
 			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) without login credentials`;
+			categories.push('14');
 		}
 		break;
 	}
 	case 'httpd':
-		category = '21';
+		categories.push('21');
 		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on ${dpt}`;
 		break;
 	case 'ftp':
-		category = '5,18';
+		categories.push('5', '18');
 		comment = `Honeypot [${SERVER_ID}]: FTP traffic detected on ${dpt}`;
 		break;
 	case 'smbd':
-		category = '21';
+		categories.push('14');
 		comment = `Honeypot [${SERVER_ID}]: SMB traffic observed on ${dpt}`;
 		break;
 	case 'mysql':
-		category = '18';
+		categories.push('18', '14');
 		comment = `Honeypot [${SERVER_ID}]: MySQL-related traffic detected on ${dpt}`;
 		break;
 	case 'tftp':
-		category = '20';
+		categories.push('20');
 		comment = `Honeypot [${SERVER_ID}]: TFTP protocol traffic on ${dpt}`;
 		break;
 	case 'upnp':
-		category = '23';
+		categories.push('23');
 		comment = `Honeypot [${SERVER_ID}]: UPnP traffic detected on ${dpt}`;
 		break;
 	case 'mqtt':
-		category = '23';
+		categories.push('23');
 		comment = `Honeypot [${SERVER_ID}]: MQTT protocol traffic on ${dpt}`;
 		break;
 	default: {
-		category = '14';
+		categories.push('14');
 		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${dpt}/${proto}`;
 	}
 	}
 
-	return { service: proto.toUpperCase(), comment, category, timestamp };
+	return { service: proto.toUpperCase(), comment, categories, timestamp };
 };
 
 module.exports = (report, abuseIPDBRateLimited) => {
@@ -103,8 +105,8 @@ module.exports = (report, abuseIPDBRateLimited) => {
 				const dpt = entry?.dst_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, category, comment } = getReportDetails(entry, dpt);
-				await report('DIONAEA', { srcIp, dpt, service, timestamp }, category, comment);
+				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
+				await report('DIONAEA', { srcIp, dpt, service, timestamp }, categories, comment);
 			} catch (err) {
 				log(2, err);
 			}
