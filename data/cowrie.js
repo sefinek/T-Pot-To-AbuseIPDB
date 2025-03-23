@@ -30,6 +30,7 @@ const flushSession = async (sessionId, report) => {
 	if (proto === 'ssh') categories.push('22');
 	if (proto === 'telnet') categories.push('23');
 	if (cmdCount > 0) categories.push('20');
+	if (loginAttempts === 0 && cmdCount === 0) categories.push('14');
 
 	const lines = [];
 	if (loginAttempts >= 2) {
