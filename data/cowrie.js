@@ -105,11 +105,7 @@ const processCowrieLogLine = async (entry, report) => {
 		break;
 
 	case 'cowrie.session.closed':
-		if (session) {
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Session closed`);
-		} else {
-			log(0, `COWRIE -> ${ip}: Session closed (session not found)`);
-		}
+		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Session ${sessionId} closed`);
 		await flushSession(sessionId, report);
 		break;
 	}
