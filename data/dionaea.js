@@ -20,48 +20,43 @@ const getReportDetails = (entry, dpt) => {
 		const password = entry?.credentials?.password?.[0];
 		if (username && !password) {
 			categories.push('18');
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) with username \`${username}\` and empty password`;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (port ${dpt}) with username \`${username}\` and empty password`;
 		} else if (username && password) {
 			categories.push('18');
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) with credentials \`${username}:${password}\``;
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (port ${dpt}) with credentials \`${username}:${password}\``;
 		} else {
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (on port ${dpt}) without login credentials`;
 			categories.push('14');
+			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (port ${dpt}) without login credentials`;
 		}
 		break;
 	}
 	case 'httpd':
-		categories.push('21');
-		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on ${dpt}`;
+		categories.push('21', 19);
+		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on port ${dpt}`;
 		break;
 	case 'ftp':
 		categories.push('5', '18');
-		comment = `Honeypot [${SERVER_ID}]: FTP traffic detected on ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: FTP brute-force attempt on port ${dpt}`;
 		break;
 	case 'smbd':
-		categories.push('14');
-		comment = `Honeypot [${SERVER_ID}]: SMB traffic observed on ${dpt}`;
+		categories.push('23');
+		comment = `Honeypot [${SERVER_ID}]: SMB traffic on port ${dpt}`;
 		break;
 	case 'mysql':
-		categories.push('18', '14');
-		comment = `Honeypot [${SERVER_ID}]: MySQL-related traffic detected on ${dpt}`;
+		categories.push('18');
+		comment = `Honeypot [${SERVER_ID}]: MySQL brute-force or probing on port ${dpt}`;
 		break;
 	case 'tftp':
 		categories.push('20');
 		comment = `Honeypot [${SERVER_ID}]: TFTP protocol traffic on ${dpt}`;
 		break;
-	case 'upnp':
+	case 'upnp': case 'mqtt':
 		categories.push('23');
-		comment = `Honeypot [${SERVER_ID}]: UPnP traffic detected on ${dpt}`;
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized ${proto.toUpperCase()} traffic on ${dpt}`;
 		break;
-	case 'mqtt':
-		categories.push('23');
-		comment = `Honeypot [${SERVER_ID}]: MQTT protocol traffic on ${dpt}`;
-		break;
-	default: {
+	default:
 		categories.push('14');
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${dpt}/${proto}`;
-	}
+		comment = `Honeypot [${SERVER_ID}]: Unauthorized or unknown traffic on ${dpt} (${proto})`;
 	}
 
 	return { service: proto.toUpperCase(), comment, categories, timestamp };
