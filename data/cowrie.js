@@ -16,38 +16,33 @@ const flushSession = async (sessionId, report) => {
 	if (!session) return;
 
 	clearTimeout(session.timer);
+	sessions.delete(sessionId);
 
-	if (!session.srcIp || !session.port || !session.proto) {
-		sessions.delete(sessionId);
-		return log(1, `COWRIE -> Incomplete session for ${session.srcIp}, discarded`);
-	}
+	const { srcIp, port, proto, timestamp, sshVersion, credentials, commands } = session;
+	if (!srcIp || !port || !proto) return log(1, `COWRIE -> Incomplete session for ${srcIp}, discarded`);
 
-	const loginAttempts = session.credentials.size;
+	const creds = [...credentials.keys()];
+	const loginAttempts = creds.length;
+	const cmdCount = commands.length;
+
 	const categories = ['15'];
 	if (loginAttempts > 1) categories.push('18');
-	if (session.proto === 'ssh') categories.push('22');
-	if (session.proto === 'telnet') categories.push('23');
-	if (session.commands.length > 0) categories.push('20');
+	if (proto === 'ssh') categories.push('22');
+	if (proto === 'telnet') categories.push('23');
+	if (cmdCount > 0) categories.push('20');
 
-	let comment = `Honeypot [${SERVER_ID}]: ${session.port}/${session.proto}`;
-	if (loginAttempts > 1) comment += ' brute-force';
-	comment += ';';
-
-	if (session.sshVersion) comment += ` SSH version: ${session.sshVersion};`;
-	if (loginAttempts > 0) {
-		comment += ` Logins: ${loginAttempts} attempts;`;
-		comment += ` Credentials: ${[...session.credentials.keys()].join(', ')};`;
-	}
-	if (session.commands.length > 0) comment += ` Commands executed: ${session.commands.length};`;
+	const lines = [`Honeypot [${SERVER_ID}] detected a ${proto.toUpperCase()} brute-force attempt on port ${port}.`];
+	if (loginAttempts) lines.push(`• Total login attempts: ${loginAttempts}`);
+	if (loginAttempts) lines.push(`• Credentials used: ${creds.join(', ')}`);
+	if (cmdCount) lines.push(`• ${cmdCount} commands were executed during the session`);
+	if (sshVersion) lines.push(`• SSH version: ${sshVersion}`);
 
 	await report('COWRIE', {
-		srcIp: session.srcIp,
-		dpt: session.port,
-		service: session.proto.toUpperCase(),
-		timestamp: session.timestamp,
-	}, categories.join(','), comment.trim());
-
-	sessions.delete(sessionId);
+		srcIp,
+		dpt: port,
+		service: proto.toUpperCase(),
+		timestamp,
+	}, categories.join(','), lines.join('\n'));
 };
 
 const processCowrieLogLine = async (entry, report) => {
