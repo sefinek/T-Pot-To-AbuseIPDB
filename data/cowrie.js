@@ -124,8 +124,7 @@ const processCowrieLogLine = async (entry, report) => {
 	}
 };
 
-module.exports = (report, abuseIPDBRateLimited) => {
-	if (abuseIPDBRateLimited) return;
+module.exports = report => {
 	if (!fs.existsSync(LOG_FILE)) {
 		log(2, `COWRIE -> Log file not found: ${LOG_FILE}`);
 		return;

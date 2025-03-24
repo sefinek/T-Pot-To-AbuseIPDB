@@ -62,8 +62,7 @@ const getReportDetails = (entry, dpt) => {
 	return { service: proto.toUpperCase(), comment, categories, timestamp };
 };
 
-module.exports = (report, abuseIPDBRateLimited) => {
-	if (abuseIPDBRateLimited) return;
+module.exports = report => {
 	if (!fs.existsSync(LOG_FILE)) {
 		log(2, `DIONAEA -> Log file not found: ${LOG_FILE}`);
 		return;

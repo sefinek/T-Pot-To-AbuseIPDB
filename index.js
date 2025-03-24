@@ -41,7 +41,6 @@ const checkRateLimit = () => {
 };
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
-	if (abuseIPDBRateLimited) return;
 	if (checkRateLimit()) return false;
 
 	if (!srcIp) return log(2, `${honeypot} -> Missing source IP (srcIp)`);
@@ -86,9 +85,9 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	await refreshServerIPs();
 	log(0, `Fetched ${getServerIPs()?.length} of your IP addresses`);
 
-	require('./data/dionaea.js')(reportToAbuseIPDb, abuseIPDBRateLimited);
-	require('./data/honeytrap.js')(reportToAbuseIPDb, abuseIPDBRateLimited);
-	require('./data/cowrie.js')(reportToAbuseIPDb, abuseIPDBRateLimited);
+	require('./data/dionaea.js')(reportToAbuseIPDb);
+	require('./data/honeytrap.js')(reportToAbuseIPDb);
+	require('./data/cowrie.js')(reportToAbuseIPDb);
 
 	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') await require('./services/updates.js')();
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
