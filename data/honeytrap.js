@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
+const ipSanitizer = require('../utils/ipSanitizer.js');
 const log = require('../utils/log.js');
 const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
@@ -48,7 +49,7 @@ const parseHttpRequest = (hex, dpt) => {
 
 	if (requestLineRaw.startsWith('POST')) {
 		const bodyContent = body.join('\n').trim();
-		if (bodyContent) output += `\nPOST Data: ${bodyContent}`;
+		if (bodyContent) output += `\nPOST Data: ${ipSanitizer(bodyContent)}`;
 	}
 
 	return output;
