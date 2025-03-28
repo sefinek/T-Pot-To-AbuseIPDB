@@ -74,7 +74,6 @@ const checkRateLimit = () => {
 		if (now >= rateLimitReset.getTime()) {
 			abuseState.isLimited = false;
 			abuseState.isBuffering = false;
-
 			if (!abuseState.sentBulk && bulkReportBuffer.size > 0) sendBulkReport();
 
 			const current = new Date();
@@ -83,7 +82,7 @@ const checkRateLimit = () => {
 			log(0, `✅ Rate limit reset. Next reset scheduled at ${rateLimitReset.toISOString()}`);
 		} else if (now - lastRateLimitLog >= RATE_LIMIT_LOG_INTERVAL) {
 			const minutesLeft = Math.ceil((rateLimitReset.getTime() - now) / 60000);
-			log(0, `⏳ AbuseIPDB rate limit active. Waiting for reset in ${minutesLeft} minutes (${rateLimitReset.toISOString()})`);
+			log(0, `⏳ AbuseIPDB rate limit is active. Collected ${bulkReportBuffer.size} IPs. Waiting for reset in ${minutesLeft} minute(s) (${rateLimitReset.toISOString()})`);
 			lastRateLimitLog = now;
 		}
 	}
