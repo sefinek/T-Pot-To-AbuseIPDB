@@ -130,7 +130,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
 			const details = JSON.stringify(err.response?.data?.errors || err.response?.data);
-			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]: ${details}\n${err.stack}`);
+			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]: ${details}\n${err.message}`);
 		}
 		return false;
 	}
