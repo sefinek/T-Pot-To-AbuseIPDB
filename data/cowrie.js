@@ -37,7 +37,7 @@ const flushIpBuffer = async (ip, report) => {
 		proto = proto || session.proto;
 		sshVersion = sshVersion || session.sshVersion;
 		timestamp = timestamp || session.timestamp;
-		session.credentials.forEach(c => credsSet.add(c));
+		session.credentials?.forEach((_, cred) => credsSet.add(cred));
 		commands.push(...session.commands);
 
 		if (session.download && session.download.url) {
@@ -50,7 +50,9 @@ const flushIpBuffer = async (ip, report) => {
 						const fileBuf = fs.readFileSync(filePath);
 						suspiciousDownloadHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
 					}
-				} catch {}
+				} catch {
+					// ...
+				}
 			}
 		}
 	}
@@ -68,13 +70,17 @@ const flushIpBuffer = async (ip, report) => {
 	if (loginAttempts === 0 && cmdCount === 0) categories.add('14');
 
 	const lines = [];
-	if (loginAttempts >= 2) {
+	if (loginAttempts >= 1 && creds) {
 		lines.push(`Honeypot [${SERVER_ID}]: A ${proto.toUpperCase()} brute-force attack was detected on port ${port}`);
 		lines.push(`• Number of login attempts: ${loginAttempts}`);
-		lines.push(`• Credentials used: ${creds.join(', ')}`);
+
+		if (creds.length === 1 && (/^[^:]+:[^:]+$/).test(creds[0])) {
+			lines.push(`• Credential used: ${creds[0]}`);
+		} else if (creds.length > 1) {
+			lines.push(`• Credentials used: ${creds.join(', ')}`);
+		}
 	} else {
 		lines.push(`Honeypot [${SERVER_ID}]: An unauthorized ${proto.toUpperCase()} connection attempt was detected on port ${port}`);
-		if (loginAttempts === 1) lines.push(`• Credential used: ${creds[0]}`);
 	}
 
 	if (cmdCount > 0) lines.push(`• ${cmdCount} command(s) were executed during the session`);
