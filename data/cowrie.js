@@ -50,9 +50,7 @@ const flushIpBuffer = async (ip, report) => {
 						const fileBuf = fs.readFileSync(filePath);
 						suspiciousDownloadHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
 					}
-				} catch {
-					// ...
-				}
+				} catch {}
 			}
 		}
 	}
@@ -70,7 +68,7 @@ const flushIpBuffer = async (ip, report) => {
 	if (loginAttempts === 0 && cmdCount === 0) categories.add('14');
 
 	const lines = [];
-	if (loginAttempts >= 1 && creds) {
+	if (loginAttempts >= 1 && creds.length > 1) {
 		lines.push(`Honeypot [${SERVER_ID}]: A ${proto.toUpperCase()} brute-force attack was detected on port ${port}`);
 		lines.push(`• Number of login attempts: ${loginAttempts}`);
 
