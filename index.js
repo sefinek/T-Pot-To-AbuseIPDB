@@ -1,8 +1,8 @@
 const FormData = require('form-data');
-const log = require('./utils/log.js');
-const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
 const axios = require('./services/axios.js');
 const { refreshServerIPs, getServerIPs } = require('./services/ipFetcher.js');
+const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
+const log = require('./utils/log.js');
 const config = require('./config.js');
 const { version } = require('./package.json');
 const discordWebhooks = require('./services/discord.js');
