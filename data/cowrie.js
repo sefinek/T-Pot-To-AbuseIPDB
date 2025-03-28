@@ -103,10 +103,7 @@ const processCowrieLogLine = async (entry, report) => {
 		ipBuffers.set(ip, buffer);
 	}
 
-	if (!buffer.reportPendingLogged) {
-		log(0, `COWRIE -> ${ip} is being buffered for delayed reporting...`);
-		buffer.reportPendingLogged = true;
-	}
+	if (!buffer.reportPendingLogged) buffer.reportPendingLogged = true;
 
 	let session = buffer.sessions.find(s => s.sessionId === sessionId);
 	if (!session && eventid !== 'cowrie.session.closed') {

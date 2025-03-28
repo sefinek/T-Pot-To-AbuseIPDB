@@ -8,7 +8,7 @@ const { version } = require('./package.json');
 const discordWebhooks = require('./services/discord.js');
 const formatTimestamp = require('./utils/formatTimestamp.js');
 
-const { ABUSEIPDB_API_KEY, SERVER_ID, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
+const { ABUSEIPDB_API_KEY, SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 const abuseState = { isLimited: false, isBuffering: false, sentBulk: false };
 const bulkReportBuffer = new Map();
@@ -109,9 +109,9 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			timestamp: formatTimestamp(timestamp || new Date().toISOString()),
 		}), { headers: { Key: ABUSEIPDB_API_KEY } });
 
-		log(0, `${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${service}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`);
 		markIPAsReported(srcIp);
 		saveReportedIPs();
+		log(0, `${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${service}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`);
 		return true;
 	} catch (err) {
 		if (err.response?.status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
@@ -139,7 +139,6 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	log(0, `🚀 T-Pot AbuseIPDB Reporter v${version} (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
 
 	loadReportedIPs();
-	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') await require('./services/updates.js')();
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
 
 	log(0, '🌐 Fetching public IP addresses from api.sefinek.net...');
