@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
 const log = require('../utils/log.js');
@@ -29,6 +30,7 @@ const flushIpBuffer = async (ip, report) => {
 	let proto = null;
 	let sshVersion = null;
 	let timestamp = null;
+	let suspiciousDownloadHash = null;
 
 	for (const session of allSessions) {
 		port = port || session.port;
@@ -37,6 +39,20 @@ const flushIpBuffer = async (ip, report) => {
 		timestamp = timestamp || session.timestamp;
 		session.credentials.forEach(c => credsSet.add(c));
 		commands.push(...session.commands);
+
+		if (session.download && session.download.url) {
+			const url = session.download.url.toLowerCase();
+			if (url.endsWith('.elf') || url.endsWith('.sh') || url.endsWith('.bin') || url.endsWith('.py')) {
+				categories.add('21');
+				try {
+					const filePath = path.resolve(session.download.outfile || '');
+					if (fs.existsSync(filePath)) {
+						const fileBuf = fs.readFileSync(filePath);
+						suspiciousDownloadHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
+					}
+				} catch {}
+			}
+		}
 	}
 
 	if (!ip || !port || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`);
@@ -63,6 +79,7 @@ const flushIpBuffer = async (ip, report) => {
 
 	if (cmdCount > 0) lines.push(`• ${cmdCount} command(s) were executed during the session`);
 	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
+	if (suspiciousDownloadHash) lines.push(`• SHA256 of suspicious file: ${suspiciousDownloadHash}`);
 
 	await report('COWRIE', {
 		srcIp: ip,
@@ -83,8 +100,14 @@ const processCowrieLogLine = async (entry, report) => {
 		buffer = {
 			sessions: [],
 			timer: setTimeout(() => flushIpBuffer(ip, report), REPORT_DELAY),
+			reportPendingLogged: false,
 		};
 		ipBuffers.set(ip, buffer);
+	}
+
+	if (!buffer.reportPendingLogged) {
+		log(0, `COWRIE -> ${ip} is being buffered for delayed reporting...`);
+		buffer.reportPendingLogged = true;
 	}
 
 	let session = buffer.sessions.find(s => s.sessionId === sessionId);
@@ -98,6 +121,7 @@ const processCowrieLogLine = async (entry, report) => {
 			credentials: new Map(),
 			commands: [],
 			sshVersion: null,
+			download: null,
 		};
 		buffer.sessions.push(session);
 	}
@@ -139,6 +163,7 @@ const processCowrieLogLine = async (entry, report) => {
 	case 'cowrie.session.file_download':
 		if (session && entry.url) {
 			session.commands.push(`[file download] ${entry.url}`);
+			session.download = { url: entry.url, outfile: entry.outfile };
 			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: File download => ${entry.url}`);
 		}
 		break;
