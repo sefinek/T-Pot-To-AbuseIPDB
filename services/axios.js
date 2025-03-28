@@ -8,6 +8,6 @@ axios.defaults.headers.common = {
 	'Connection': 'keep-alive',
 };
 
-axios.defaults.timeout = 30000;
+axios.defaults.timeout = 50000;
 
 module.exports = axios;

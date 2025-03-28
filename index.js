@@ -137,9 +137,11 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 };
 
 (async () => {
-	log(0, `🚀 T-Pot AbuseIPDB Reporter v${version} started (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
+	log(0, `🚀 T-Pot AbuseIPDB Reporter v${version} (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
 
 	loadReportedIPs();
+	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') await require('./services/updates.js')();
+	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
 
 	log(0, '🌐 Fetching public IP addresses from api.sefinek.net...');
 	await refreshServerIPs();
@@ -148,9 +150,6 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	require('./data/dionaea.js')(reportToAbuseIPDb);
 	require('./data/honeytrap.js')(reportToAbuseIPDb);
 	require('./data/cowrie.js')(reportToAbuseIPDb);
-
-	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') await require('./services/updates.js')();
-	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
 
 	if (SERVER_ID !== 'development') await discordWebhooks(0, `T-Pot AbuseIPDB Reporter has started on \`${SERVER_ID}\``);
 	process.send?.('ready');

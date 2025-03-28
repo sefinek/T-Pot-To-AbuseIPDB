@@ -60,7 +60,6 @@ const flushIpBuffer = async (ip, report) => {
 	const creds = [...credsSet];
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
-
 	if (loginAttempts >= 2) categories.add('18');
 	if (proto === 'ssh') categories.add('22');
 	if (proto === 'telnet') categories.add('23');

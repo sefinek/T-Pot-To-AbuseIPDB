@@ -1,7 +1,6 @@
-const { SERVER_ID, AUTO_UPDATE_SCHEDULE } = require('../config.js').MAIN;
-
 const simpleGit = require('simple-git');
 const { CronJob } = require('cron');
+const { SERVER_ID, AUTO_UPDATE_SCHEDULE } = require('../config.js').MAIN;
 const restartApp = require('./reloadApp.js');
 const log = require('../utils/log.js');
 const discordWebhooks = require('./discord.js');
