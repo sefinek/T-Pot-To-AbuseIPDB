@@ -7,31 +7,49 @@ const ipSanitizer = require('../utils/ipSanitizer.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(COWRIE_LOG_FILE);
+const REPORT_DELAY = SERVER_ID === 'development' ? 30 * 1000 : 10 * 60 * 1000;
+
 let fileOffset = 0;
+const ipBuffers = new Map();
 
-const sessions = new Map();
-const FLUSH_INTERVAL = SERVER_ID === 'development' ? 30 * 1000 : 5 * 60 * 1000;
+const flushIpBuffer = async (ip, report) => {
+	const buffer = ipBuffers.get(ip);
+	if (!buffer) return;
 
-const flushSession = async (sessionId, report) => {
-	const session = sessions.get(sessionId);
-	if (!session) return;
+	clearTimeout(buffer.timer);
+	ipBuffers.delete(ip);
 
-	clearTimeout(session.timer);
-	sessions.delete(sessionId);
+	const allSessions = buffer.sessions;
+	if (allSessions.length === 0) return;
 
-	const { srcIp, port, proto, timestamp, sshVersion, credentials, commands } = session;
-	if (!srcIp || !port || !proto) return log(1, `COWRIE -> Incomplete session for ${srcIp}, discarded`);
+	const categories = new Set(['15']);
+	const credsSet = new Set();
+	const commands = [];
+	let port = null;
+	let proto = null;
+	let sshVersion = null;
+	let timestamp = null;
 
-	const creds = [...credentials.keys()];
+	for (const session of allSessions) {
+		port = port || session.port;
+		proto = proto || session.proto;
+		sshVersion = sshVersion || session.sshVersion;
+		timestamp = timestamp || session.timestamp;
+		session.credentials.forEach(c => credsSet.add(c));
+		commands.push(...session.commands);
+	}
+
+	if (!ip || !port || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`);
+
+	const creds = [...credsSet];
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
 
-	const categories = ['15'];
-	if (loginAttempts >= 2) categories.push('18');
-	if (proto === 'ssh') categories.push('22');
-	if (proto === 'telnet') categories.push('23');
-	if (cmdCount > 0) categories.push('20');
-	if (loginAttempts === 0 && cmdCount === 0) categories.push('14');
+	if (loginAttempts >= 2) categories.add('18');
+	if (proto === 'ssh') categories.add('22');
+	if (proto === 'telnet') categories.add('23');
+	if (cmdCount > 0) categories.add('20');
+	if (loginAttempts === 0 && cmdCount === 0) categories.add('14');
 
 	const lines = [];
 	if (loginAttempts >= 2) {
@@ -47,11 +65,11 @@ const flushSession = async (sessionId, report) => {
 	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
 
 	await report('COWRIE', {
-		srcIp,
+		srcIp: ip,
 		dpt: port,
 		service: proto.toUpperCase(),
 		timestamp,
-	}, categories.join(','), lines.join('\n'));
+	}, [...categories].join(','), lines.join('\n'));
 };
 
 const processCowrieLogLine = async (entry, report) => {
@@ -60,9 +78,19 @@ const processCowrieLogLine = async (entry, report) => {
 	const { eventid } = entry;
 	if (!ip || !eventid || !sessionId) return log(1, 'COWRIE -> Skipped: missing src_ip, eventid or sessionId');
 
-	let session = sessions.get(sessionId);
+	let buffer = ipBuffers.get(ip);
+	if (!buffer) {
+		buffer = {
+			sessions: [],
+			timer: setTimeout(() => flushIpBuffer(ip, report), REPORT_DELAY),
+		};
+		ipBuffers.set(ip, buffer);
+	}
+
+	let session = buffer.sessions.find(s => s.sessionId === sessionId);
 	if (!session && eventid !== 'cowrie.session.closed') {
 		session = {
+			sessionId,
 			srcIp: ip,
 			port: entry.dst_port,
 			proto: entry.protocol,
@@ -70,9 +98,8 @@ const processCowrieLogLine = async (entry, report) => {
 			credentials: new Map(),
 			commands: [],
 			sshVersion: null,
-			timer: setTimeout(() => flushSession(sessionId, report), FLUSH_INTERVAL),
 		};
-		sessions.set(sessionId, session);
+		buffer.sessions.push(session);
 	}
 
 	if (session) session.timestamp = entry.timestamp;
@@ -86,11 +113,10 @@ const processCowrieLogLine = async (entry, report) => {
 		}
 		break;
 
-	case 'cowrie.login.success': case 'cowrie.login.failed':
+	case 'cowrie.login.success':
+	case 'cowrie.login.failed':
 		if (session && (entry.username || entry.password)) {
-
 			session.credentials.set(`${ipSanitizer(entry.username)}:${ipSanitizer(entry.password)}`, true);
-
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
 			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: ${status} => ${entry.username}:${entry.password}`);
 		}
@@ -110,9 +136,15 @@ const processCowrieLogLine = async (entry, report) => {
 		}
 		break;
 
+	case 'cowrie.session.file_download':
+		if (session && entry.url) {
+			session.commands.push(`[file download] ${entry.url}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: File download => ${entry.url}`);
+		}
+		break;
+
 	case 'cowrie.session.closed':
-		log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Session ${sessionId} closed`);
-		await flushSession(sessionId, report);
+		log(0, `COWRIE -> ${ip}/${session?.proto}/${session?.port}: Session ${sessionId} closed`);
 		break;
 	}
 };
@@ -140,6 +172,8 @@ module.exports = report => {
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
 		rl.on('line', async line => {
+			if (!line.length) return;
+
 			let entry;
 			try {
 				entry = JSON.parse(line);
