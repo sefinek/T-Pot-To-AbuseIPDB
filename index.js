@@ -52,10 +52,10 @@ const sendBulkReport = async () => {
 		const saved = data?.data?.savedReports ?? 0;
 		const failed = data?.data?.invalidReports?.length ?? 0;
 
-		log(0, `Bulk report sent: ${saved} saved, ${failed} rejected`);
+		log(0, `[${new Date().toISOString()}] Sent bulk report to AbuseIPDB: ${saved} accepted, ${failed} rejected`);
 		if (failed > 0) {
 			data.data.invalidReports.forEach((fail) => {
-				log(1, `Bulk report error: [Row ${fail.rowNumber}] ${fail.input} => ${fail.error}`);
+				log(1, `Rejected in bulk report [Row ${fail.rowNumber}] ${fail.input} -> ${fail.error}`);
 			});
 		}
 
@@ -64,7 +64,7 @@ const sendBulkReport = async () => {
 		bulkReportBuffer.clear();
 		abuseState.sentBulk = true;
 	} catch (err) {
-		log(1, `Bulk report failed: ${err.message}`);
+		log(1, `❌ Failed to send bulk report to AbuseIPDB: ${err.stack}`);
 	}
 };
 
@@ -80,10 +80,10 @@ const checkRateLimit = () => {
 			const current = new Date();
 			rateLimitReset = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1, 0, 1));
 			abuseState.sentBulk = false;
-			log(0, `Rate limit state reset. Next reset at ${rateLimitReset.toISOString()}`);
+			log(0, `✅ Rate limit reset. Next reset scheduled at ${rateLimitReset.toISOString()}`);
 		} else if (now - lastRateLimitLog >= RATE_LIMIT_LOG_INTERVAL) {
 			const minutesLeft = Math.ceil((rateLimitReset.getTime() - now) / 60000);
-			log(0, `AbuseIPDB rate limit active. Waiting for reset at ${rateLimitReset.toISOString()} (in ${minutesLeft} min)`);
+			log(0, `⏳ AbuseIPDB rate limit active. Waiting for reset in ${minutesLeft} minutes (${rateLimitReset.toISOString()})`);
 			lastRateLimitLog = now;
 		}
 	}
@@ -92,13 +92,13 @@ const checkRateLimit = () => {
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
 	if (checkRateLimit()) return false;
-	if (!srcIp) return log(2, `${honeypot} -> Missing source IP (srcIp)`);
+	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`);
 	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
 
 	if (abuseState.isBuffering) {
 		bulkReportBuffer.set(srcIp, { timestamp, categories, comment });
-		log(0, `${honeypot} -> Buffered ${srcIp} for later bulk report`);
+		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report later`);
 		return true;
 	}
 
@@ -110,7 +110,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			timestamp: formatTimestamp(timestamp || new Date().toISOString()),
 		}), { headers: { Key: ABUSEIPDB_API_KEY } });
 
-		log(0, `${honeypot} -> Reported ${srcIp} [${dpt}/${service}]; Categories: ${categories}; Abuse: ${res.data.abuseConfidenceScore}%`);
+		log(0, `${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${service}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`);
 		markIPAsReported(srcIp);
 		saveReportedIPs();
 		return true;
@@ -123,27 +123,27 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 				lastRateLimitLog = Date.now();
 				const now = new Date();
 				rateLimitReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
-				log(1, `Daily limit reached for AbuseIPDB! Buffering reports until ${rateLimitReset.toISOString()}`);
+				log(1, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${rateLimitReset.toISOString()}`);
 			}
 
 			bulkReportBuffer.set(srcIp, { timestamp, categories, comment });
-			log(0, `${honeypot} -> Buffered ${srcIp} for later bulk report`);
+			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
-			const details = JSON.stringify(err.response?.data?.errors || err.response?.data || err.message);
-			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> Failed to report ${srcIp} [${dpt}/${service}]; ${err.message}\n${details}`);
+			const details = JSON.stringify(err.response?.data?.errors || err.response?.data);
+			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]: ${details}\n${err.stack}`);
 		}
 		return false;
 	}
 };
 
 (async () => {
-	log(0, `Version ${version} - https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter`);
+	log(0, `🚀 T-Pot AbuseIPDB Reporter v${version} started (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
 
 	loadReportedIPs();
 
-	log(0, 'Trying to fetch your IPv4 and IPv6 address from api.sefinek.net...');
+	log(0, '🌐 Fetching public IP addresses from api.sefinek.net...');
 	await refreshServerIPs();
-	log(0, `Fetched ${getServerIPs()?.length} of your IP addresses`);
+	log(0, `✅ Retrieved ${getServerIPs()?.length} IP address(es) for this machine`);
 
 	require('./data/dionaea.js')(reportToAbuseIPDb);
 	require('./data/honeytrap.js')(reportToAbuseIPDb);
