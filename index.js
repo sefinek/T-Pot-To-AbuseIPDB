@@ -10,7 +10,7 @@ const formatTimestamp = require('./utils/formatTimestamp.js');
 
 const { ABUSEIPDB_API_KEY, SERVER_ID, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
-let abuseIPDBRateLimited = false, bulkMode = false;
+const abuseState = { isLimited: false, isBuffering: false, sentBulk: false };
 const bulkReportBuffer = new Map();
 
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
@@ -62,6 +62,7 @@ const sendBulkReport = async () => {
 		for (const ip of bulkReportBuffer.keys()) markIPAsReported(ip);
 		saveReportedIPs();
 		bulkReportBuffer.clear();
+		abuseState.sentBulk = true;
 	} catch (err) {
 		log(1, `Bulk report failed: ${err.message}`);
 	}
@@ -69,15 +70,16 @@ const sendBulkReport = async () => {
 
 const checkRateLimit = () => {
 	const now = Date.now();
-	if (abuseIPDBRateLimited) {
+	if (abuseState.isLimited) {
 		if (now >= rateLimitReset.getTime()) {
-			abuseIPDBRateLimited = false;
-			bulkMode = false;
+			abuseState.isLimited = false;
+			abuseState.isBuffering = false;
 
-			if (bulkReportBuffer.size > 0) sendBulkReport();
+			if (!abuseState.sentBulk && bulkReportBuffer.size > 0) sendBulkReport();
 
 			const current = new Date();
 			rateLimitReset = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1, 0, 1));
+			abuseState.sentBulk = false;
 			log(0, `Rate limit state reset. Next reset at ${rateLimitReset.toISOString()}`);
 		} else if (now - lastRateLimitLog >= RATE_LIMIT_LOG_INTERVAL) {
 			const minutesLeft = Math.ceil((rateLimitReset.getTime() - now) / 60000);
@@ -85,7 +87,7 @@ const checkRateLimit = () => {
 			lastRateLimitLog = now;
 		}
 	}
-	return abuseIPDBRateLimited;
+	return abuseState.isLimited;
 };
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
@@ -94,7 +96,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
 
-	if (bulkMode) {
+	if (abuseState.isBuffering) {
 		bulkReportBuffer.set(srcIp, { timestamp, categories, comment });
 		log(0, `${honeypot} -> Buffered ${srcIp} for later bulk report`);
 		return true;
@@ -114,9 +116,10 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 		return true;
 	} catch (err) {
 		if (err.response?.status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
-			if (!abuseIPDBRateLimited) {
-				abuseIPDBRateLimited = true;
-				bulkMode = true;
+			if (!abuseState.isLimited) {
+				abuseState.isLimited = true;
+				abuseState.isBuffering = true;
+				abuseState.sentBulk = false;
 				lastRateLimitLog = Date.now();
 				const now = new Date();
 				rateLimitReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
