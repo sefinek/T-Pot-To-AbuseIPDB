@@ -180,7 +180,7 @@ module.exports = report => {
 	chokidar.watch(LOG_FILE, {
 		persistent: true,
 		ignoreInitial: true,
-		awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 },
+		awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 },
 		alwaysStat: true,
 		atomic: true,
 	}).on('change', file => {
