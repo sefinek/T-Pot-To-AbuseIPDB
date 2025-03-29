@@ -1,6 +1,6 @@
-const FormData = require('form-data');
 const fs = require('node:fs');
 const path = require('node:path');
+const FormData = require('form-data');
 const axios = require('./services/axios.js');
 const { refreshServerIPs, getServerIPs } = require('./services/ipFetcher.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
@@ -134,8 +134,6 @@ const checkRateLimit = () => {
 };
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
-	checkRateLimit();
-
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`);
 	if (getServerIPs().includes(srcIp)) return;
 
@@ -144,6 +142,8 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 		log(0, `${honeypot} -> Skipping ${srcIp}, already reported recently`);
 		return;
 	}
+
+	checkRateLimit();
 
 	if (ABUSE_STATE.isBuffering) {
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
