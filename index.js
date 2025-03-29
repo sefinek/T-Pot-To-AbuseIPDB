@@ -16,8 +16,10 @@ const BULK_REPORT_BUFFER = new Map();
 const BUFFER_FILE = path.join(__dirname, 'bulk-report-buffer.csv');
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
+const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
 
 let LAST_RATELIMIT_LOG = 0;
+let LAST_STATS_LOG = 0;
 let RATELIMIT_RESET = (() => {
 	const now = new Date();
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
@@ -108,6 +110,11 @@ const sendBulkReport = async () => {
 
 const checkRateLimit = () => {
 	const now = Date.now();
+	if (now - LAST_STATS_LOG >= BUFFER_STATS_INTERVAL && BULK_REPORT_BUFFER.size > 0) {
+		log(0, `📊 Buffer size: ${BULK_REPORT_BUFFER.size} IP(s) currently queued`);
+		LAST_STATS_LOG = now;
+	}
+
 	if (ABUSE_STATE.isLimited) {
 		if (now >= RATELIMIT_RESET.getTime()) {
 			ABUSE_STATE.isLimited = false;
