@@ -1,4 +1,6 @@
 const FormData = require('form-data');
+const fs = require('node:fs');
+const path = require('node:path');
 const axios = require('./services/axios.js');
 const { refreshServerIPs, getServerIPs } = require('./services/ipFetcher.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
@@ -10,21 +12,55 @@ const formatTimestamp = require('./utils/formatTimestamp.js');
 
 const { ABUSEIPDB_API_KEY, SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
-const abuseState = { isLimited: false, isBuffering: false, sentBulk: false };
-const bulkReportBuffer = new Map();
-
+const BULK_REPORT_BUFFER = new Map();
+const BUFFER_FILE = path.join(__dirname, 'BULK_REPORT_BUFFER.csv');
+const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
-let lastRateLimitLog = 0;
-let rateLimitReset = (() => {
+
+let LAST_RATELIMIT_LOG = 0;
+let RATELIMIT_RESET = (() => {
 	const now = new Date();
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
 })();
 
+const saveBufferToFile = () => {
+	if (!BULK_REPORT_BUFFER.size) return;
+	const lines = [];
+	for (const [ip, entry] of BULK_REPORT_BUFFER.entries()) {
+		lines.push([
+			ip,
+			JSON.stringify(entry.categories),
+			entry.timestamp,
+			entry.comment.replace(/\n/g, ' ').substring(0, 1024),
+		].join(','));
+	}
+	fs.writeFileSync(BUFFER_FILE, lines.join('\n'));
+	log(0, `💾 Saved ${BULK_REPORT_BUFFER.size} IPs to buffer file (${BUFFER_FILE})`);
+};
+
+const loadBufferFromFile = () => {
+	if (!fs.existsSync(BUFFER_FILE)) return;
+	const lines = fs.readFileSync(BUFFER_FILE, 'utf-8').split('\n');
+	let loaded = 0;
+	for (const line of lines) {
+		if (!line.trim()) continue;
+		const [ip, categories, timestamp, comment] = line.split(',');
+		BULK_REPORT_BUFFER.set(ip, {
+			categories: JSON.parse(categories),
+			timestamp: Number(timestamp),
+			comment,
+		});
+		loaded++;
+	}
+	fs.unlinkSync(BUFFER_FILE);
+	log(0, `📂 Loaded ${loaded} IPs from buffer file (${BUFFER_FILE})`);
+};
+
 const sendBulkReport = async () => {
-	if (!bulkReportBuffer.size) return;
+	if (!BULK_REPORT_BUFFER.size) return;
 
 	const lines = ['IP,Categories,ReportDate,Comment'];
-	for (const [ip, entry] of bulkReportBuffer.entries()) {
+	for (const [ip, entry] of BULK_REPORT_BUFFER.entries()) {
 		const line = [
 			ip,
 			`"${entry.categories}"`,
@@ -59,10 +95,12 @@ const sendBulkReport = async () => {
 			});
 		}
 
-		for (const ip of bulkReportBuffer.keys()) markIPAsReported(ip);
+		for (const ip of BULK_REPORT_BUFFER.keys()) markIPAsReported(ip);
 		saveReportedIPs();
-		bulkReportBuffer.clear();
-		abuseState.sentBulk = true;
+		BULK_REPORT_BUFFER.clear();
+		if (fs.existsSync(BUFFER_FILE)) fs.unlinkSync(BUFFER_FILE);
+		log(0, '🧹 Cleared buffer after bulk report. Buffer file deleted.');
+		ABUSE_STATE.sentBulk = true;
 	} catch (err) {
 		log(1, `❌ Failed to send bulk report to AbuseIPDB: ${err.stack}`);
 	}
@@ -70,23 +108,23 @@ const sendBulkReport = async () => {
 
 const checkRateLimit = () => {
 	const now = Date.now();
-	if (abuseState.isLimited) {
-		if (now >= rateLimitReset.getTime()) {
-			abuseState.isLimited = false;
-			abuseState.isBuffering = false;
-			if (!abuseState.sentBulk && bulkReportBuffer.size > 0) sendBulkReport();
+	if (ABUSE_STATE.isLimited) {
+		if (now >= RATELIMIT_RESET.getTime()) {
+			ABUSE_STATE.isLimited = false;
+			ABUSE_STATE.isBuffering = false;
+			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) sendBulkReport();
 
 			const current = new Date();
-			rateLimitReset = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1, 0, 1));
-			abuseState.sentBulk = false;
-			log(0, `✅ Rate limit reset. Next reset scheduled at ${rateLimitReset.toISOString()}`);
-		} else if (now - lastRateLimitLog >= RATE_LIMIT_LOG_INTERVAL) {
-			const minutesLeft = Math.ceil((rateLimitReset.getTime() - now) / 60000);
-			log(0, `⏳ AbuseIPDB rate limit is active. Collected ${bulkReportBuffer.size} IPs. Waiting for reset in ${minutesLeft} minute(s) (${rateLimitReset.toISOString()})`);
-			lastRateLimitLog = now;
+			RATELIMIT_RESET = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1, 0, 1));
+			ABUSE_STATE.sentBulk = false;
+			log(0, `✅ Rate limit reset. Next reset scheduled at ${RATELIMIT_RESET.toISOString()}`);
+		} else if (now - LAST_RATELIMIT_LOG >= RATE_LIMIT_LOG_INTERVAL) {
+			const minutesLeft = Math.ceil((RATELIMIT_RESET.getTime() - now) / 60000);
+			log(0, `⏳ AbuseIPDB rate limit is active. Collected ${BULK_REPORT_BUFFER.size} IPs. Waiting for reset in ${minutesLeft} minute(s) (${RATELIMIT_RESET.toISOString()})`);
+			LAST_RATELIMIT_LOG = now;
 		}
 	}
-	return abuseState.isLimited;
+	return ABUSE_STATE.isLimited;
 };
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
@@ -95,8 +133,9 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
 
-	if (abuseState.isBuffering) {
-		bulkReportBuffer.set(srcIp, { timestamp, categories, comment });
+	if (ABUSE_STATE.isBuffering) {
+		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
+		saveBufferToFile();
 		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report later`);
 		return true;
 	}
@@ -115,17 +154,18 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 		return true;
 	} catch (err) {
 		if (err.response?.status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
-			if (!abuseState.isLimited) {
-				abuseState.isLimited = true;
-				abuseState.isBuffering = true;
-				abuseState.sentBulk = false;
-				lastRateLimitLog = Date.now();
+			if (!ABUSE_STATE.isLimited) {
+				ABUSE_STATE.isLimited = true;
+				ABUSE_STATE.isBuffering = true;
+				ABUSE_STATE.sentBulk = false;
+				LAST_RATELIMIT_LOG = Date.now();
 				const now = new Date();
-				rateLimitReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
-				log(1, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${rateLimitReset.toISOString()}`);
+				RATELIMIT_RESET = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
+				log(1, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${RATELIMIT_RESET.toISOString()}`);
 			}
 
-			bulkReportBuffer.set(srcIp, { timestamp, categories, comment });
+			BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
+			saveBufferToFile();
 			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
 			const details = JSON.stringify(err.response?.data?.errors || err.response?.data);
@@ -139,6 +179,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	log(0, `🚀 T-Pot AbuseIPDB Reporter v${version} (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
 
 	loadReportedIPs();
+	loadBufferFromFile();
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
 
 	log(0, '🌐 Fetching public IP addresses from api.sefinek.net...');
