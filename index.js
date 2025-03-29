@@ -131,7 +131,12 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	if (checkRateLimit()) return false;
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`);
 	if (getServerIPs().includes(srcIp)) return;
-	if (isIPReportedRecently(srcIp)) return;
+
+	log(0, `${honeypot} -> Checking if ${srcIp} was reported recently...`);
+	if (isIPReportedRecently(srcIp)) {
+		log(0, `${honeypot} -> Skipping ${srcIp}, already reported recently`);
+		return;
+	}
 
 	if (ABUSE_STATE.isBuffering) {
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
