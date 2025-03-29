@@ -29,14 +29,15 @@ const saveBufferToFile = () => {
 	if (!BULK_REPORT_BUFFER.size) return;
 	const lines = [];
 	for (const [ip, entry] of BULK_REPORT_BUFFER.entries()) {
+		const safeComment = entry.comment.replace(/"/g, '""').replace(/\n/g, '\\n').substring(0, 1024);
 		lines.push([
-			ip,
-			JSON.stringify(entry.categories),
-			entry.timestamp,
-			entry.comment.replace(/\n/g, ' ').substring(0, 1024),
+			`"${ip}"`,
+			`"${Array.isArray(entry.categories) ? entry.categories.join(',') : entry.categories}"`,
+			new Date(entry.timestamp).toISOString(),
+			`"${safeComment}"`,
 		].join(','));
 	}
-	fs.writeFileSync(BUFFER_FILE, lines.join('\n'));
+	fs.writeFileSync(BUFFER_FILE, lines.join('\n') + '\n');
 	log(0, `💾 Saved ${BULK_REPORT_BUFFER.size} IPs to buffer file (${BUFFER_FILE})`);
 };
 
@@ -46,11 +47,13 @@ const loadBufferFromFile = () => {
 	let loaded = 0;
 	for (const line of lines) {
 		if (!line.trim()) continue;
-		const [ip, categories, timestamp, comment] = line.split(',');
+		const match = line.match(/^"([^\\"]+)","([^\\"]+)",([^,]+),"([\s\S]*)"$/);
+		if (!match) continue;
+		const [, ip, categories, timestamp, comment] = match;
 		BULK_REPORT_BUFFER.set(ip, {
-			categories: JSON.parse(categories),
-			timestamp: Number(timestamp),
-			comment,
+			categories: categories.split(',').map(c => c.trim()),
+			timestamp: new Date(timestamp).getTime(),
+			comment: comment.replace(/\\n/g, '\n'),
 		});
 		loaded++;
 	}
@@ -92,7 +95,7 @@ const sendBulkReport = async () => {
 
 		log(0, `🤮 Sent bulk report to AbuseIPDB: ${saved} accepted, ${failed} rejected`);
 		if (failed > 0) {
-			data.data.invalidReports.forEach((fail) => {
+			data.data.invalidReports.forEach(fail => {
 				log(1, `Rejected in bulk report [Row ${fail.rowNumber}] ${fail.input} -> ${fail.error}`);
 			});
 		}
@@ -146,10 +149,15 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	checkRateLimit();
 
 	if (ABUSE_STATE.isBuffering) {
+		if (BULK_REPORT_BUFFER.has(srcIp)) {
+			log(0, `${honeypot} -> ⚠️ ${srcIp} is already in buffer, skipping`);
+			return;
+		}
+
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 		saveBufferToFile();
 		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report (buffering)`);
-		return true;
+		return;
 	}
 
 	try {
@@ -163,7 +171,6 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 		markIPAsReported(srcIp);
 		saveReportedIPs();
 		log(0, `${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${service}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`);
-		return true;
 	} catch (err) {
 		if (err.response?.status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
 			if (!ABUSE_STATE.isLimited) {
@@ -176,6 +183,11 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 				log(1, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${RATELIMIT_RESET.toISOString()}`);
 			}
 
+			if (BULK_REPORT_BUFFER.has(srcIp)) {
+				log(0, `${honeypot} -> ⚠️ ${srcIp} is already in buffer, skipping`);
+				return;
+			}
+
 			BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 			saveBufferToFile();
 			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
@@ -183,7 +195,6 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			const details = JSON.stringify(err.response?.data?.errors || err.response?.data);
 			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]: ${details}\n${err.message}`);
 		}
-		return false;
 	}
 };
 
