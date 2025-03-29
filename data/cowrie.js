@@ -67,7 +67,7 @@ const flushIpBuffer = async (ip, report) => {
 	if (loginAttempts === 0 && cmdCount === 0) categories.add('14');
 
 	const lines = [];
-	lines.push(`Honeypot [${SERVER_ID}]: ${proto.toUpperCase()} ${creds.length >= 1 ? 'A brute-force attack' : 'An unauthorized connection attempt'} was detected on ${port}`);
+	lines.push(`Honeypot [${SERVER_ID}]: ${creds.length >= 1 ? 'A brute-force attack' : 'An unauthorized connection attempt'} detected on ${port}/${proto.toUpperCase()}`);
 	if (creds.length === 1) {
 		lines.push(`• Credential used: ${creds[0]}`);
 	} else if (creds.length > 1) {
