@@ -124,11 +124,11 @@ const checkRateLimit = () => {
 			LAST_RATELIMIT_LOG = now;
 		}
 	}
-	return ABUSE_STATE.isLimited;
 };
 
 const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
-	if (checkRateLimit()) return false;
+	checkRateLimit();
+
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`);
 	if (getServerIPs().includes(srcIp)) return;
 
@@ -141,7 +141,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	if (ABUSE_STATE.isBuffering) {
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 		saveBufferToFile();
-		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report later`);
+		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report (buffering)`);
 		return true;
 	}
 
