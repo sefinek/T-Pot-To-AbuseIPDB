@@ -180,6 +180,16 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 
 	loadReportedIPs();
 	loadBufferFromFile();
+
+	if (BULK_REPORT_BUFFER.size > 0 && !ABUSE_STATE.isLimited) {
+		log(0, `📤 Found ${BULK_REPORT_BUFFER.size} IP(s) in buffer after restart. Sending bulk report...`);
+		await sendBulkReport();
+	}
+
+	// Tests
+	// ABUSE_STATE.isLimited = true;
+	// ABUSE_STATE.isBuffering = true;
+
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
 
 	log(0, '🌐 Fetching public IP addresses from api.sefinek.net...');
