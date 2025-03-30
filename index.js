@@ -10,7 +10,7 @@ const { version } = require('./package.json');
 const discordWebhooks = require('./services/discord.js');
 const formatTimestamp = require('./utils/formatTimestamp.js');
 
-const { ABUSEIPDB_API_KEY, SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
+const { ABUSEIPDB_API_KEY, SERVER_ID, DEBUG_MODE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 const BULK_REPORT_BUFFER = new Map();
 const BUFFER_FILE = path.join(__dirname, 'bulk-report-buffer.csv');
@@ -140,9 +140,9 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`);
 	if (getServerIPs().includes(srcIp)) return;
 
-	log(0, `${honeypot} -> Checking if ${srcIp} was reported recently...`);
+	if (DEBUG_MODE) log(0, `${honeypot} -> Checking if ${srcIp} was reported recently...`);
 	if (isIPReportedRecently(srcIp)) {
-		log(0, `${honeypot} -> Skipping ${srcIp}, already reported recently`);
+		if (DEBUG_MODE) log(0, `${honeypot} -> Skipping ${srcIp}, already reported recently`);
 		return;
 	}
 
@@ -150,7 +150,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 
 	if (ABUSE_STATE.isBuffering) {
 		if (BULK_REPORT_BUFFER.has(srcIp)) {
-			log(0, `${honeypot} -> ⚠️ ${srcIp} is already in buffer, skipping`);
+			if (DEBUG_MODE) log(0, `${honeypot} -> ⚠️ ${srcIp} is already in buffer, skipping`);
 			return;
 		}
 
