@@ -22,12 +22,12 @@
   "dependencies": {
     "axios": "^1.8.4",
     "chokidar": "^4.0.3",
-    "cron": "^4.1.3",
+    "cron": "^4.1.4",
     "form-data": "^4.0.2",
     "ipaddr.js": "^2.2.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.23.0",
+    "@eslint/js": "^9.24.0",
     "globals": "^16.0.0"
   }
 }
