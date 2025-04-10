@@ -11,19 +11,18 @@ const sendWebhook = async () => {
 	try {
 		await fs.access(CACHE_FILE);
 	} catch {
-		return log(2, `Cache file not found: ${CACHE_FILE}`);
+		return log(2, `Cache file not found: ${CACHE_FILE}`, 1);
 	}
 
 	let data;
 	try {
 		data = (await fs.readFile(CACHE_FILE, 'utf8')).trim();
 	} catch (err) {
-		return log(2, `Error reading file: ${err.message}`);
+		return log(2, `Error reading file: ${err.message}`, 1);
 	}
 
 	if (!data) {
 		log(0, `Cache file is empty: ${CACHE_FILE}`);
-		return discordWebhooks(4, `Cache file is empty: \`${CACHE_FILE}\``);
 	}
 
 	try {
@@ -63,7 +62,7 @@ const sendWebhook = async () => {
 		await discordWebhooks(7, `Midnight. Summary of IP address reports (${totalReports}) from yesterday (${yesterdayString}).\nGood night to you, sleep well! 😴\n\`\`\`${summaryString}\`\`\``);
 		log(0, `Reported IPs yesterday by hour:\n${summaryString}\nTotal reported IPs: ${totalReports} ${pluralizeReport(totalReports)}`);
 	} catch (err) {
-		log(2, err);
+		log(2, err, 1);
 	}
 };
 

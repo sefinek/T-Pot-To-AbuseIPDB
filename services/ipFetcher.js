@@ -4,12 +4,10 @@ const { CronJob } = require('cron');
 const { get } = require('./axios.js');
 const isLocalIP = require('../utils/isLocalIP.js');
 const log = require('../utils/log.js');
-const discordWebhooks = require('./discord.js');
 const { IP_REFRESH_SCHEDULE, IPv6_SUPPORT } = require('../config.js').MAIN;
 
 const ipAddresses = new Set();
 let ipv6ErrorCount = 0, ipv6ErrorLogged = false;
-const IPv6Failed = 'It looks like your ISP hasn\'t assigned you any IPv6 address. I won\'t attempt to fetch it again.';
 
 const fetchIPAddress = async family => {
 	if (family === 6 && (ipv6ErrorLogged || !IPv6_SUPPORT)) return;
@@ -24,15 +22,13 @@ const fetchIPAddress = async family => {
 
 			if (family === 6) {
 				if (ipv6ErrorCount > 0) {
-					const IPv6Success = `Uh, it looks like IPv6 has started working! It only succeeded after ${ipv6ErrorCount} attempts.`;
-					log(0, IPv6Success);
-					await discordWebhooks(4, IPv6Success);
+					log(0, `Uh, it looks like IPv6 has started working! It only succeeded after ${ipv6ErrorCount} attempts.`, 1);
 				}
 
 				ipv6ErrorCount = 0;
 			}
 		} else {
-			log(2, `Unexpected API response: ${JSON.stringify(data)}`);
+			log(2, `Unexpected API response: ${JSON.stringify(data)}`, 1);
 		}
 	} catch (err) {
 		log(2, `Error fetching IPv${family} address: ${err.message}`);
@@ -42,8 +38,7 @@ const fetchIPAddress = async family => {
 
 			if (ipv6ErrorCount >= 6 && !ipv6ErrorLogged) {
 				ipv6ErrorLogged = true;
-				log(0, IPv6Failed);
-				await discordWebhooks(4, IPv6Failed);
+				log(0, 'It looks like your ISP hasn\'t assigned you any IPv6 address. I won\'t attempt to fetch it again.', 1);
 			} else {
 				await new Promise(resolve => setTimeout(resolve, 4000));
 				await fetchIPAddress(6);

@@ -55,7 +55,7 @@ const flushIpBuffer = async (ip, report) => {
 		}
 	}
 
-	if (!ip || !port || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`);
+	if (!ip || !port || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`, 1);
 
 	const creds = [...credsSet];
 	const loginAttempts = creds.length;
@@ -91,7 +91,7 @@ const processCowrieLogLine = async (entry, report) => {
 	const ip = entry?.src_ip;
 	const sessionId = entry?.session;
 	const { eventid } = entry;
-	if (!ip || !eventid || !sessionId) return log(1, 'COWRIE -> Skipped: missing src_ip, eventid or sessionId');
+	if (!ip || !eventid || !sessionId) return log(1, 'COWRIE -> Skipped: missing src_ip, eventid or sessionId', 1);
 
 	let buffer = ipBuffers.get(ip);
 	if (!buffer) {
@@ -171,7 +171,7 @@ const processCowrieLogLine = async (entry, report) => {
 
 module.exports = report => {
 	if (!fs.existsSync(LOG_FILE)) {
-		log(2, `COWRIE -> Log file not found: ${LOG_FILE}`);
+		log(2, `COWRIE -> Log file not found: ${LOG_FILE}`, 1);
 		return;
 	}
 
@@ -187,7 +187,7 @@ module.exports = report => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			return log(0, 'COWRIE -> Log truncated, offset reset');
+			return log(0, 'COWRIE -> Log truncated, offset reset', 1);
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
@@ -198,7 +198,7 @@ module.exports = report => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				log(2, `COWRIE -> JSON parse error: ${err.message}`);
+				log(2, `COWRIE -> JSON parse error: ${err.message}`, 1);
 				log(2, `COWRIE -> Faulty line: ${JSON.stringify(line)}`);
 				return;
 			}

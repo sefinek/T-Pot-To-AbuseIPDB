@@ -124,7 +124,7 @@ const getReportDetails = (entry, dpt) => {
 
 module.exports = report => {
 	if (!fs.existsSync(LOG_FILE)) {
-		log(2, `HONEYTRAP -> Log file not found: ${LOG_FILE}`);
+		log(2, `HONEYTRAP -> Log file not found: ${LOG_FILE}`, 1);
 		return;
 	}
 
@@ -140,7 +140,7 @@ module.exports = report => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			return log(0, 'HONEYTRAP -> Log truncated, offset reset');
+			return log(0, 'HONEYTRAP -> Log truncated, offset reset', 1);
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
@@ -149,7 +149,7 @@ module.exports = report => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				log(2, `COWRIE -> JSON parse error: ${err.message}`);
+				log(2, `COWRIE -> JSON parse error: ${err.message}`, 1);
 				log(2, `COWRIE -> Faulty line: ${JSON.stringify(line)}`);
 				return;
 			}
