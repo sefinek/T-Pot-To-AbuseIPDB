@@ -73,11 +73,6 @@ const getReportDetails = (entry, dpt) => {
 		comment = `Large payload (${payloadLen} bytes) on ${dpt}/${proto}`;
 		break;
 
-	case (/^1603/).test(hex):
-		categories = '14';
-		comment = `TLS handshake on ${dpt}/${proto} (likely service probe)`;
-		break;
-
 	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
 		categories = '21';
 		comment = parseHttpRequest(hex, dpt);
