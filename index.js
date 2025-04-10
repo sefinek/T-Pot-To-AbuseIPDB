@@ -192,8 +192,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			saveBufferToFile();
 			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
-			const details = JSON.stringify(err.response?.data?.errors || err.response?.data);
-			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]: ${details}\n${err.message}`, 1);
+			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`, 1);
 		}
 	}
 };
