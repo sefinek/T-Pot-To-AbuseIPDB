@@ -12,50 +12,49 @@ const getReportDetails = (entry, dpt) => {
 	const proto = entry?.connection?.protocol || 'unknown';
 	const timestamp = entry?.timestamp || new Date().toISOString();
 
-	const categories = [];
-	let comment;
+	let categories, comment;
 	switch (proto) {
 	case 'mssqld': {
 		const username = entry?.credentials?.username?.[0];
 		const password = entry?.credentials?.password?.[0];
 		if (username && !password) {
-			categories.push('18');
-			comment = `MSSQL traffic (port ${dpt}) with username \`${username}\` and empty password`;
+			categories = '18';
+			comment = `MSSQL traffic (on ${dpt}) with username ${username} and empty password`;
 		} else if (username && password) {
-			categories.push('18');
-			comment = `MSSQL traffic (port ${dpt}) with credentials \`${username}:${password}\``;
+			categories = '18';
+			comment = `MSSQL traffic (on ${dpt}) with credentials ${username}:${password}`;
 		} else {
-			categories.push('14');
-			comment = `MSSQL traffic (port ${dpt}) without login credentials`;
+			categories = '14';
+			comment = `MSSQL traffic (on ${dpt}) without login credentials`;
 		}
 		break;
 	}
 	case 'httpd':
-		categories.push('21', '19');
+		categories = '21,19';
 		comment = `Incoming HTTP traffic on port ${dpt}`;
 		break;
 	case 'ftp':
-		categories.push('5', '18');
+		categories = '5,18';
 		comment = `FTP brute-force attempt on port ${dpt}`;
 		break;
 	case 'smbd':
-		categories.push('23');
+		categories = '23';
 		comment = `SMB traffic on port ${dpt}`;
 		break;
 	case 'mysql':
-		categories.push('18');
+		categories = '18';
 		comment = `MySQL brute-force or probing on port ${dpt}`;
 		break;
 	case 'tftp':
-		categories.push('20');
+		categories = '20';
 		comment = `TFTP protocol traffic on ${dpt}`;
 		break;
 	case 'upnp': case 'mqtt':
-		categories.push('23');
+		categories = '23';
 		comment = `Unauthorized ${proto.toUpperCase()} traffic on ${dpt}`;
 		break;
 	default:
-		categories.push('14');
+		categories = '14';
 		comment = `Unauthorized or unknown traffic on ${dpt} (${proto})`;
 	}
 

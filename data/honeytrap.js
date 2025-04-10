@@ -61,65 +61,50 @@ const getReportDetails = (entry, dpt) => {
 	const ascii = Buffer.from(hex, 'hex').toString('utf8').replace(/\s+/g, ' ').toLowerCase();
 	const payloadLen = entry?.attack_connection?.payload?.length || 0;
 
-	let category, comment;
+	let categories, comment;
 	switch (true) {
 	case payloadLen === 0:
-		category = '14';
+		categories = '14';
 		comment = `Empty payload on ${dpt}/${proto} (likely service probe)`;
 		break;
 
 	case payloadLen > 1000:
-		category = '15';
+		categories = '15';
 		comment = `Large payload (${payloadLen} bytes) on ${dpt}/${proto}`;
 		break;
 
 	case (/^1603/).test(hex):
-		category = '14';
+		categories = '14';
 		comment = `TLS handshake on ${dpt}/${proto} (likely service probe)`;
 		break;
 
 	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
-		category = '21';
+		categories = '21';
 		comment = parseHttpRequest(hex, dpt);
 		break;
 
-	case dpt === 11211: case ascii.includes('stats'):
-		category = '14';
-		comment = `Memcached command on ${dpt}/${proto}`;
-		break;
-
-	case dpt === 23 || dpt === 2323:
-		category = '14,23';
-		comment = `Telnet-based connection attempt on ${dpt}/${proto}`;
-		break;
-
 	case ascii.includes('ssh'):
-		category = '18,22';
-		comment = `SSH handshake/banner on ${dpt}/${proto}`;
-		break;
-
-	case ascii.includes('mgmt') || ascii.includes('mglndd_'):
-		category = '23';
-		comment = `IoT-specific traffic on ${dpt}/${proto}`;
+		categories = '18,22';
+		comment = `SSH handshake/banner on ${dpt}/${proto} (${payloadLen} bytes of payload)`;
 		break;
 
 	case ascii.includes('cookie:'):
-		category = '21,15';
+		categories = '21,15';
 		comment = `HTTP header with cookie on ${dpt}/${proto}`;
 		break;
 
-	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
-		category = '15';
+	case (/(admin|root|wget|curl|bash|eval|php|bin)/).test(ascii):
+		categories = '15';
 		comment = `Suspicious payload on ${dpt}/${proto} (possible command injection)`;
 		break;
 
 	default:
-		category = '14';
-		comment = `Unauthorized traffic on ${dpt}/${proto}`;
+		categories = '14';
+		comment = `Unauthorized traffic on ${dpt}/${proto} (${payloadLen} bytes of payload)`;
 		break;
 	}
 
-	return { service: proto, comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, category, timestamp: entry?.['@timestamp'] };
+	return { service: proto, comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp: entry?.['@timestamp'] };
 };
 
 module.exports = report => {
@@ -159,8 +144,8 @@ module.exports = report => {
 				const dpt = entry?.attack_connection?.local_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, category, comment } = getReportDetails(entry, dpt);
-				await report('HONEYTRAP', { srcIp, dpt, service, timestamp }, category, comment);
+				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
+				await report('HONEYTRAP', { srcIp, dpt, service, timestamp }, categories, comment);
 			} catch (err) {
 				log(2, err);
 			}
