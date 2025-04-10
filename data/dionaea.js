@@ -20,46 +20,46 @@ const getReportDetails = (entry, dpt) => {
 		const password = entry?.credentials?.password?.[0];
 		if (username && !password) {
 			categories.push('18');
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (port ${dpt}) with username \`${username}\` and empty password`;
+			comment = `MSSQL traffic (port ${dpt}) with username \`${username}\` and empty password`;
 		} else if (username && password) {
 			categories.push('18');
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (port ${dpt}) with credentials \`${username}:${password}\``;
+			comment = `MSSQL traffic (port ${dpt}) with credentials \`${username}:${password}\``;
 		} else {
 			categories.push('14');
-			comment = `Honeypot [${SERVER_ID}]: MSSQL traffic (port ${dpt}) without login credentials`;
+			comment = `MSSQL traffic (port ${dpt}) without login credentials`;
 		}
 		break;
 	}
 	case 'httpd':
 		categories.push('21', '19');
-		comment = `Honeypot [${SERVER_ID}]: Incoming HTTP traffic on port ${dpt}`;
+		comment = `Incoming HTTP traffic on port ${dpt}`;
 		break;
 	case 'ftp':
 		categories.push('5', '18');
-		comment = `Honeypot [${SERVER_ID}]: FTP brute-force attempt on port ${dpt}`;
+		comment = `FTP brute-force attempt on port ${dpt}`;
 		break;
 	case 'smbd':
 		categories.push('23');
-		comment = `Honeypot [${SERVER_ID}]: SMB traffic on port ${dpt}`;
+		comment = `SMB traffic on port ${dpt}`;
 		break;
 	case 'mysql':
 		categories.push('18');
-		comment = `Honeypot [${SERVER_ID}]: MySQL brute-force or probing on port ${dpt}`;
+		comment = `MySQL brute-force or probing on port ${dpt}`;
 		break;
 	case 'tftp':
 		categories.push('20');
-		comment = `Honeypot [${SERVER_ID}]: TFTP protocol traffic on ${dpt}`;
+		comment = `TFTP protocol traffic on ${dpt}`;
 		break;
 	case 'upnp': case 'mqtt':
 		categories.push('23');
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized ${proto.toUpperCase()} traffic on ${dpt}`;
+		comment = `Unauthorized ${proto.toUpperCase()} traffic on ${dpt}`;
 		break;
 	default:
 		categories.push('14');
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized or unknown traffic on ${dpt} (${proto})`;
+		comment = `Unauthorized or unknown traffic on ${dpt} (${proto})`;
 	}
 
-	return { service: proto.toUpperCase(), comment, categories, timestamp };
+	return { service: proto.toUpperCase(), comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp };
 };
 
 module.exports = report => {

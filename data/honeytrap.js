@@ -44,7 +44,7 @@ const parseHttpRequest = (hex, dpt) => {
 		.map(h => `${capitalizeHeader(h)}: ${headers[h]}`)
 		.join('\n');
 
-	let output = `Honeypot [${SERVER_ID}]: ${protocol} request on ${dpt}\n\n${requestLine}`;
+	let output = `${protocol} request on ${dpt}\n\n${requestLine}`;
 	if (formattedHeaders) output += `\n${formattedHeaders}`;
 
 	if (requestLineRaw.startsWith('POST')) {
@@ -65,17 +65,17 @@ const getReportDetails = (entry, dpt) => {
 	switch (true) {
 	case payloadLen === 0:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Empty payload on ${dpt}/${proto} (likely service probe)`;
+		comment = `Empty payload on ${dpt}/${proto} (likely service probe)`;
 		break;
 
 	case payloadLen > 1000:
 		category = '15';
-		comment = `Honeypot [${SERVER_ID}]: Large payload (${payloadLen} bytes) on ${dpt}/${proto}`;
+		comment = `Large payload (${payloadLen} bytes) on ${dpt}/${proto}`;
 		break;
 
 	case (/^1603/).test(hex):
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: TLS handshake on ${dpt}/${proto} (likely service probe)`;
+		comment = `TLS handshake on ${dpt}/${proto} (likely service probe)`;
 		break;
 
 	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
@@ -85,41 +85,41 @@ const getReportDetails = (entry, dpt) => {
 
 	case dpt === 11211: case ascii.includes('stats'):
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Memcached command on ${dpt}/${proto}`;
+		comment = `Memcached command on ${dpt}/${proto}`;
 		break;
 
 	case dpt === 23 || dpt === 2323:
 		category = '14,23';
-		comment = `Honeypot [${SERVER_ID}]: Telnet-based connection attempt on ${dpt}/${proto}`;
+		comment = `Telnet-based connection attempt on ${dpt}/${proto}`;
 		break;
 
 	case ascii.includes('ssh'):
 		category = '18,22';
-		comment = `Honeypot [${SERVER_ID}]: SSH handshake/banner on ${dpt}/${proto}`;
+		comment = `SSH handshake/banner on ${dpt}/${proto}`;
 		break;
 
 	case ascii.includes('mgmt') || ascii.includes('mglndd_'):
 		category = '23';
-		comment = `Honeypot [${SERVER_ID}]: IoT-specific traffic on ${dpt}/${proto}`;
+		comment = `IoT-specific traffic on ${dpt}/${proto}`;
 		break;
 
 	case ascii.includes('cookie:'):
 		category = '21,15';
-		comment = `Honeypot [${SERVER_ID}]: HTTP header with cookie on ${dpt}/${proto}`;
+		comment = `HTTP header with cookie on ${dpt}/${proto}`;
 		break;
 
 	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
 		category = '15';
-		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on ${dpt}/${proto} (possible command injection)`;
+		comment = `Suspicious payload on ${dpt}/${proto} (possible command injection)`;
 		break;
 
 	default:
 		category = '14';
-		comment = `Honeypot [${SERVER_ID}]: Unauthorized traffic on ${dpt}/${proto}`;
+		comment = `Unauthorized traffic on ${dpt}/${proto}`;
 		break;
 	}
 
-	return { service: proto, comment, category, timestamp: entry?.['@timestamp'] };
+	return { service: proto, comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, category, timestamp: entry?.['@timestamp'] };
 };
 
 module.exports = report => {

@@ -1,7 +1,7 @@
+const axios = require('./services/axios.js');
+const FormData = require('form-data');
 const fs = require('node:fs');
 const path = require('node:path');
-const FormData = require('form-data');
-const axios = require('./services/axios.js');
 const { refreshServerIPs, getServerIPs } = require('./services/ipFetcher.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./services/cache.js');
 const log = require('./utils/log.js');
@@ -223,7 +223,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	require('./data/honeytrap.js')(reportToAbuseIPDb);
 	require('./data/cowrie.js')(reportToAbuseIPDb);
 
-	if (SERVER_ID !== 'development') await discordWebhooks(0, `T-Pot AbuseIPDB Reporter has started on \`${SERVER_ID}\``);
+	if (SERVER_ID !== 'development') await discordWebhooks(0, `T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`);
 	process.send?.('ready');
 })();
 
