@@ -110,7 +110,7 @@ const getReportDetails = (entry, dpt) => {
 
 	case (/(admin|root|wget|curl|nc|bash|cmd|eval|php|sh|bin)/).test(ascii):
 		category = '15';
-		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on ${dpt}/${proto} — possible command injection`;
+		comment = `Honeypot [${SERVER_ID}]: Suspicious payload on ${dpt}/${proto} (possible command injection)`;
 		break;
 
 	default:
