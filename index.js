@@ -13,7 +13,7 @@ const formatTimestamp = require('./utils/formatTimestamp.js');
 const { ABUSEIPDB_API_KEY, SERVER_ID, DEBUG_MODE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 const BULK_REPORT_BUFFER = new Map();
-const BUFFER_FILE = path.join(__dirname, 'bulk-report-buffer.csv');
+const BUFFER_FILE = path.join(__dirname, 'tmp', 'bulk-report-buffer.csv');
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
 const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
