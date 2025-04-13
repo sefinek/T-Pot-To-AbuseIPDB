@@ -21,9 +21,7 @@ const summaryEmbed = async () => {
 		return log(2, `Error reading file: ${err.message}`, 1);
 	}
 
-	if (!data) {
-		log(0, `Cache file is empty: ${CACHE_FILE}`);
-	}
+	if (!data) log(0, `Cache file is empty: ${CACHE_FILE}`);
 
 	try {
 		const yesterday = new Date();
