@@ -102,7 +102,7 @@ const sendBulkReport = async () => {
 		saveReportedIPs();
 		BULK_REPORT_BUFFER.clear();
 		if (fs.existsSync(BUFFER_FILE)) fs.unlinkSync(BUFFER_FILE);
-		log(0, '🧹 Cleared buffer after bulk report. Buffer file deleted.');
+		log(0, '🧹 Buffer file deleted');
 		ABUSE_STATE.sentBulk = true;
 	} catch (err) {
 		log(1, `❌ Failed to send bulk report to AbuseIPDB: ${err.stack}`, 1);
