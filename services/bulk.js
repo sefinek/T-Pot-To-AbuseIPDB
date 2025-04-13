@@ -17,7 +17,7 @@ const saveBufferToFile = () => {
 
 	const records = [];
 	for (const [ip, entry] of BULK_REPORT_BUFFER.entries()) {
-		const safeComment = entry.comment.replace(/\n/g, ' ').substring(0, 1024);
+		const safeComment = entry.comment.replace(/\n/g, '\\n').substring(0, 1024);
 		records.push([ip, entry.categories, new Date(entry.timestamp).toISOString(), safeComment]);
 	}
 
