@@ -91,7 +91,7 @@ const sendBulkReport = async () => {
 		const saved = data?.data?.savedReports ?? 0;
 		const failed = data?.data?.invalidReports?.length ?? 0;
 
-		log(0, `🤮 Sent bulk report to AbuseIPDB: ${saved} accepted, ${failed} rejected`, 1);
+		log(0, `🤮 Sent bulk report (${BULK_REPORT_BUFFER} IPs): ${saved} accepted, ${failed} rejected`, 1);
 		if (failed > 0) {
 			data.data.invalidReports.forEach(fail => {
 				log(1, `Rejected in bulk report [Row ${fail.rowNumber}] ${fail.input} -> ${fail.error}`);
