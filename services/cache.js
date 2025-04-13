@@ -25,9 +25,9 @@ const loadReportedIPs = () => {
 				if (ip && !isNaN(time)) reportedIPs.set(ip, Number(time));
 			});
 
-		log(0, `Loaded ${reportedIPs.size} IPs from ${CACHE_FILE}`);
+		log(0, `📃 Loaded ${reportedIPs.size} IPs from ${CACHE_FILE}`);
 	} else {
-		log(0, `${CACHE_FILE} does not exist. No data to load.`);
+		log(0, `📃 ${CACHE_FILE} does not exist. No data to load.`);
 	}
 };
 
