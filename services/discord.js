@@ -21,7 +21,10 @@ module.exports = async (id, description) => {
 		headers: { 'Content-Type': 'application/json' },
 		data: {
 			embeds: [{
-				description: description.replace(/(\b\w+=)/g, '**$1**'),
+				description: description
+					.replace(/\p{Emoji_Presentation}/gu, '')
+					.replace(/(\b\w+=)/g, '**$1**')
+					.trim(),
 				color: logType.color,
 				footer: {
 					text: `${SERVER_ID ? `${SERVER_ID} • ` : ''}${repoFull}`,
