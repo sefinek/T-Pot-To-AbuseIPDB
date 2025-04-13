@@ -66,7 +66,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 		saveBufferToFile();
-		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report (buffering)`);
+		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`);
 		return;
 	}
 

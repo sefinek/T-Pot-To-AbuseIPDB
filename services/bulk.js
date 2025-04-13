@@ -18,19 +18,12 @@ const saveBufferToFile = () => {
 	const records = [];
 	for (const [ip, entry] of BULK_REPORT_BUFFER.entries()) {
 		const safeComment = entry.comment.substring(0, 1024);
-
-		records.push([
-			ip,
-			entry.categories,
-			new Date(entry.timestamp).toISOString(),
-			safeComment,
-		]);
+		records.push([ip, entry.categories, new Date(entry.timestamp).toISOString(), safeComment]);
 	}
 
 	try {
 		const output = stringify(records, { quoted: true });
 		fs.writeFileSync(BUFFER_FILE, output);
-		log(0, `💾 Saved ${BULK_REPORT_BUFFER.size} IPs to buffer file (${BUFFER_FILE})`);
 	} catch (err) {
 		log(1, `❌ Failed to write buffer file: ${err.message}`, 1);
 	}
@@ -43,22 +36,13 @@ const loadBufferFromFile = () => {
 	let loaded = 0;
 
 	try {
-		const records = parse(fileContent, {
-			columns: false,
-			skip_empty_lines: true,
-			trim: true,
-		});
+		const records = parse(fileContent, { columns: false, skip_empty_lines: true, trim: true });
 
 		for (const record of records) {
 			const [ip, categories, timestamp, comment] = record;
-
 			if (!ip || !timestamp) continue;
 
-			BULK_REPORT_BUFFER.set(ip, {
-				categories,
-				timestamp: new Date(timestamp).getTime(),
-				comment,
-			});
+			BULK_REPORT_BUFFER.set(ip, { categories, timestamp: new Date(timestamp).getTime(), comment });
 			loaded++;
 		}
 
