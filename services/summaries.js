@@ -1,6 +1,6 @@
 const { CronJob } = require('cron');
 const fs = require('node:fs/promises');
-const sendWebhook = require('./sendWebhook.js');
+const sendWebhook = require('./discordWebhooks.js');
 const log = require('../utils/log.js');
 const { CACHE_FILE } = require('../config.js').MAIN;
 

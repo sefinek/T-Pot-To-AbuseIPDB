@@ -1,4 +1,4 @@
-const sendWebhook = require('../services/sendWebhook.js');
+const sendWebhook = require('../services/discordWebhooks.js');
 
 const levels = {
 	0: { method: 'log' },
