@@ -4,7 +4,7 @@ const { repoFull } = require('../utils/repo.js');
 const { SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = require('../config.js').MAIN;
 
 const TYPES = {
-	0: { type: 'SUCCESS', emoji: '\\✅', color: 0x60D06D },
+	0: { type: 'INFORMATION', emoji: '\\📄', color: 0x60D06D },
 	1: { type: 'WARN', emoji: '\\⚠️', color: 0xFFB02E },
 	2: { type: 'ERROR', emoji: '\\❌', color: 0xF92F60 },
 	3: { type: 'FAIL', emoji: '\\🔴', color: 0xF8312F },
