@@ -87,7 +87,7 @@ const flushIpBuffer = async (ip, report) => {
 		service: proto.toUpperCase(),
 		timestamp,
 	}, [...categories].join(','), comment);
-	await sendWebhook(0, comment);
+	await sendWebhook(3, comment);
 };
 
 const processCowrieLogLine = async (entry, report) => {
