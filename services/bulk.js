@@ -9,7 +9,7 @@ const log = require('../utils/log.js');
 const { ABUSEIPDB_API_KEY } = require('../config.js').MAIN;
 
 const BULK_REPORT_BUFFER = new Map();
-const BUFFER_FILE = path.join(__dirname, 'tmp', 'bulk-report-buffer.csv');
+const BUFFER_FILE = path.join(__dirname, '..', 'tmp', 'bulk-report-buffer.csv');
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 
 const saveBufferToFile = () => {
