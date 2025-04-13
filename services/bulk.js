@@ -32,20 +32,16 @@ const saveBufferToFile = () => {
 const loadBufferFromFile = () => {
 	if (!fs.existsSync(BUFFER_FILE)) return;
 
-	const fileContent = fs.readFileSync(BUFFER_FILE, 'utf-8');
-	let loaded = 0;
-
 	try {
+		const fileContent = fs.readFileSync(BUFFER_FILE, 'utf-8');
+
 		const records = parse(fileContent, { columns: false, from_line: 2, skip_empty_lines: true, trim: true });
 		for (const record of records) {
 			const [ip, categories, timestamp, comment] = record;
 			if (!ip || !timestamp) continue;
 
 			BULK_REPORT_BUFFER.set(ip, { categories, timestamp: new Date(timestamp).getTime(), comment });
-			loaded++;
 		}
-
-		log(0, `📂 Loaded ${loaded} IPs from ${BUFFER_FILE}`, 1);
 	} catch (err) {
 		log(1, `❌ Failed to parse buffer file: ${err.message}`, 1);
 	} finally {
