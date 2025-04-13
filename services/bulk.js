@@ -6,11 +6,10 @@ const path = require('node:path');
 const axios = require('../services/axios.js');
 const { saveReportedIPs, markIPAsReported } = require('../services/cache.js');
 const log = require('../utils/log.js');
-const config = require('../config.js');
+const { ABUSEIPDB_API_KEY } = require('../config.js').MAIN;
 
-const BUFFER_FILE = path.join(__dirname, 'tmp', 'bulk-report-buffer.csv');
-const { ABUSEIPDB_API_KEY } = config.MAIN;
 const BULK_REPORT_BUFFER = new Map();
+const BUFFER_FILE = path.join(__dirname, 'tmp', 'bulk-report-buffer.csv');
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 
 const saveBufferToFile = () => {
@@ -29,9 +28,7 @@ const saveBufferToFile = () => {
 	}
 
 	try {
-		const output = stringify(records, {
-			quoted: true,
-		});
+		const output = stringify(records, { quoted: true });
 		fs.writeFileSync(BUFFER_FILE, output);
 		log(0, `💾 Saved ${BULK_REPORT_BUFFER.size} IPs to buffer file (${BUFFER_FILE})`);
 	} catch (err) {
@@ -133,4 +130,5 @@ module.exports = {
 	saveBufferToFile,
 	loadBufferFromFile,
 	sendBulkReport,
+	BULK_REPORT_BUFFER,
 };
