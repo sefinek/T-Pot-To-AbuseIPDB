@@ -91,7 +91,7 @@ const sendBulkReport = async () => {
 		const saved = data?.data?.savedReports ?? 0;
 		const failed = data?.data?.invalidReports?.length ?? 0;
 
-		log(0, `🤮 Sent bulk report (${BULK_REPORT_BUFFER} IPs): ${saved} accepted, ${failed} rejected`, 1);
+		log(0, `🤮 Sent bulk report (${BULK_REPORT_BUFFER.size} IPs): ${saved} accepted, ${failed} rejected`, 1);
 		if (failed > 0) {
 			data.data.invalidReports.forEach(fail => {
 				log(1, `Rejected in bulk report [Row ${fail.rowNumber}] ${fail.input} -> ${fail.error}`);
@@ -102,7 +102,6 @@ const sendBulkReport = async () => {
 		saveReportedIPs();
 		BULK_REPORT_BUFFER.clear();
 		if (fs.existsSync(BUFFER_FILE)) fs.unlinkSync(BUFFER_FILE);
-		log(0, '🧹 Buffer file deleted');
 		ABUSE_STATE.sentBulk = true;
 	} catch (err) {
 		log(1, `❌ Failed to send bulk report to AbuseIPDB: ${err.stack}`, 1);
