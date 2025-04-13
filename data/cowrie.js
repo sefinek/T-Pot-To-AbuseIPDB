@@ -3,6 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
+const sendWebhook = require('../services/sendWebhook.js');
 const log = require('../utils/log.js');
 const ipSanitizer = require('../utils/ipSanitizer.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
@@ -79,12 +80,14 @@ const flushIpBuffer = async (ip, report) => {
 	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
 	if (suspiciousDownloadHash) lines.push(`• SHA256 of suspicious file: ${suspiciousDownloadHash}`);
 
+	const comment = lines.join('\n');
 	await report('COWRIE', {
 		srcIp: ip,
 		dpt: port,
 		service: proto.toUpperCase(),
 		timestamp,
-	}, [...categories].join(','), lines.join('\n'));
+	}, [...categories].join(','), comment);
+	await sendWebhook(0, comment);
 };
 
 const processCowrieLogLine = async (entry, report) => {

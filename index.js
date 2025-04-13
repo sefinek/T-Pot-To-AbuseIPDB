@@ -5,7 +5,7 @@ const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported
 const log = require('./utils/log.js');
 const config = require('./config.js');
 const { version } = require('./package.json');
-const discordWebhooks = require('./services/discord.js');
+const sendWebhook = require('./services/sendWebhook.js');
 const formatTimestamp = require('./utils/formatTimestamp.js');
 
 const { ABUSEIPDB_API_KEY, SERVER_ID, DEBUG_MODE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
@@ -139,7 +139,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 	require('./data/honeytrap.js')(reportIp);
 	require('./data/cowrie.js')(reportIp);
 
-	if (SERVER_ID !== 'development') await discordWebhooks(0, `T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`);
+	if (SERVER_ID !== 'development') await sendWebhook(0, `T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`);
 	process.send?.('ready');
 })();
 
