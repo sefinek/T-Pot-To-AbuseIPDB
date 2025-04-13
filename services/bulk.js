@@ -18,11 +18,11 @@ const saveBufferToFile = () => {
 
 	const records = [];
 	for (const [ip, entry] of BULK_REPORT_BUFFER.entries()) {
-		const safeComment = entry.comment.replace(/\n/g, '\\n').substring(0, 1024);
+		const safeComment = entry.comment.substring(0, 1024);
 
 		records.push([
 			ip,
-			Array.isArray(entry.categories) ? entry.categories.join(',') : entry.categories,
+			entry.categories,
 			new Date(entry.timestamp).toISOString(),
 			safeComment,
 		]);
@@ -58,17 +58,18 @@ const loadBufferFromFile = () => {
 			if (!ip || !timestamp) continue;
 
 			BULK_REPORT_BUFFER.set(ip, {
-				categories: categories.split(',').map(c => c.trim()),
+				categories,
 				timestamp: new Date(timestamp).getTime(),
-				comment: comment,
+				comment,
 			});
 			loaded++;
 		}
 
-		fs.unlinkSync(BUFFER_FILE);
 		log(0, `📂 Loaded ${loaded} IPs from buffer file (${BUFFER_FILE})`, 1);
 	} catch (err) {
 		log(1, `❌ Failed to parse buffer file: ${err.message}`, 1);
+	} finally {
+		if (fs.existsSync(BUFFER_FILE)) fs.unlinkSync(BUFFER_FILE);
 	}
 };
 
@@ -81,7 +82,7 @@ const sendBulkReport = async () => {
 
 		records.push([
 			ip,
-			Array.isArray(entry.categories) ? entry.categories.join(',') : entry.categories,
+			entry.categories,
 			new Date(entry.timestamp || Date.now()).toISOString(),
 			cleanComment,
 		]);
