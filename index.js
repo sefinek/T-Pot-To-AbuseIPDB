@@ -60,13 +60,13 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 
 	if (ABUSE_STATE.isBuffering) {
 		if (BULK_REPORT_BUFFER.has(srcIp)) {
-			if (DEBUG_MODE) log(0, `${honeypot} -> ⚠️ ${srcIp} is already in buffer, skipping`);
+			if (DEBUG_MODE) log(0, `${honeypot} -> 📃 ${srcIp} is already in buffer, skipping`);
 			return;
 		}
 
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 		saveBufferToFile();
-		log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`);
+		log(0, `${honeypot} -> 💾 Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`);
 		return;
 	}
 
@@ -100,7 +100,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 
 			BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 			saveBufferToFile();
-			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
+			log(0, `${honeypot} -> ✋ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
 			log(
 				err.response?.status === 429 ? 0 : 2,
