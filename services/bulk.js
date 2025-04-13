@@ -22,7 +22,7 @@ const saveBufferToFile = () => {
 	}
 
 	try {
-		const output = stringify(records, { quoted: true });
+		const output = stringify(records, { header: true, columns: ['IP', 'Categories', 'ReportDate', 'Comment'], quoted: true });
 		fs.writeFileSync(BUFFER_FILE, output);
 	} catch (err) {
 		log(1, `❌ Failed to write buffer file: ${err.message}`, 1);
@@ -36,8 +36,7 @@ const loadBufferFromFile = () => {
 	let loaded = 0;
 
 	try {
-		const records = parse(fileContent, { columns: false, skip_empty_lines: true, trim: true });
-
+		const records = parse(fileContent, { columns: false, from_line: 2, skip_empty_lines: true, trim: true });
 		for (const record of records) {
 			const [ip, categories, timestamp, comment] = record;
 			if (!ip || !timestamp) continue;
@@ -64,7 +63,7 @@ const sendBulkReport = async () => {
 		records.push([
 			ip,
 			entry.categories,
-			new Date(entry.timestamp || Date.now()).toISOString(),
+			new Date(entry.timestamp ?? Date.now()).toISOString(),
 			cleanComment,
 		]);
 	}
