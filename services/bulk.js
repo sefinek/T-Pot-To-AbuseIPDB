@@ -12,6 +12,11 @@ const BULK_REPORT_BUFFER = new Map();
 const BUFFER_FILE = path.join(__dirname, '..', 'tmp', 'bulk-report-buffer.csv');
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 
+const ensureDirectoryExists = filePath => {
+	const dir = path.dirname(filePath);
+	if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+};
+
 const saveBufferToFile = () => {
 	if (!BULK_REPORT_BUFFER.size) return;
 
@@ -23,6 +28,8 @@ const saveBufferToFile = () => {
 
 	try {
 		const output = stringify(records, { header: true, columns: ['IP', 'Categories', 'ReportDate', 'Comment'], quoted: true });
+
+		ensureDirectoryExists(BUFFER_FILE);
 		fs.writeFileSync(BUFFER_FILE, output);
 	} catch (err) {
 		log(1, `❌ Failed to write buffer file: ${err.message}`, 1);

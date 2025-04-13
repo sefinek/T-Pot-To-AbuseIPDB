@@ -7,22 +7,18 @@ const config = require('./config.js');
 const { version } = require('./package.json');
 const sendWebhook = require('./services/discordWebhooks.js');
 const formatTimestamp = require('./utils/formatTimestamp.js');
-
-const { ABUSEIPDB_API_KEY, SERVER_ID, DEBUG_MODE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
+const { ABUSEIPDB_API_KEY, SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
 const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
-
-let LAST_RATELIMIT_LOG = 0;
-let LAST_STATS_LOG = 0;
 
 const nextRateLimitReset = () => {
 	const now = new Date();
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
 };
 
-let RATELIMIT_RESET = nextRateLimitReset();
+let LAST_RATELIMIT_LOG = 0, LAST_STATS_LOG = 0, RATELIMIT_RESET = nextRateLimitReset();
 
 const checkRateLimit = () => {
 	const now = Date.now();
@@ -52,19 +48,12 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`, 1);
 
 	if (getServerIPs().includes(srcIp)) return;
-	if (DEBUG_MODE) log(0, `${honeypot} -> Checking if ${srcIp} was reported recently...`);
-	if (isIPReportedRecently(srcIp)) {
-		if (DEBUG_MODE) log(0, `${honeypot} -> Skipping ${srcIp}, already reported recently`);
-		return;
-	}
+	if (isIPReportedRecently(srcIp)) return;
 
 	checkRateLimit();
 
 	if (ABUSE_STATE.isBuffering) {
-		if (BULK_REPORT_BUFFER.has(srcIp)) {
-			if (DEBUG_MODE) log(0, `${honeypot} -> 📃 ${srcIp} is already in buffer, skipping`);
-			return;
-		}
+		if (BULK_REPORT_BUFFER.has(srcIp)) return;
 
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 		saveBufferToFile();
@@ -124,10 +113,6 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 		log(0, `📤 Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
 		await sendBulkReport();
 	}
-
-	// Tests
-	// ABUSE_STATE.isLimited = true;
-	// ABUSE_STATE.isBuffering = true;
 
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./services/summaries.js')();
 
