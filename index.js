@@ -180,7 +180,7 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 				LAST_RATELIMIT_LOG = Date.now();
 				const now = new Date();
 				RATELIMIT_RESET = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
-				log(1, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${RATELIMIT_RESET.toISOString()}`, 1);
+				log(0, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${RATELIMIT_RESET.toISOString()}`, 1);
 			}
 
 			if (BULK_REPORT_BUFFER.has(srcIp)) {
