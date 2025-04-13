@@ -3,7 +3,7 @@ exports.MAIN = {
 	DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
 	HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json',
 	COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
-	CACHE_FILE: '/tmp/tpot-abuseipdb-reporter.cache',
+	CACHE_FILE: './tmp/tpot-abuseipdb-reporter.cache',
 
 	SERVER_ID: null, // The server name that will be visible in the reports (e.g., 'homeserver1'). If you don't want to define it, leave the value as null.
 	DEBUG_MODE: false,
