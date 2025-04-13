@@ -7,7 +7,7 @@ const { CACHE_FILE } = require('../config.js').MAIN;
 const formatHourRange = hour => `${hour.toString().padStart(2, '0')}:00-${hour.toString().padStart(2, '0')}:59`;
 const pluralizeReport = count => (count === 1 ? 'report' : 'reports');
 
-const sendWebhook = async () => {
+const summaryEmbed = async () => {
 	try {
 		await fs.access(CACHE_FILE);
 	} catch {
@@ -67,6 +67,6 @@ const sendWebhook = async () => {
 };
 
 module.exports = async () => {
-	// await sendWebhook();
-	new CronJob('0 0 * * *', sendWebhook, null, true, 'UTC');
+	// await summaryEmbed();
+	new CronJob('0 0 * * *', summaryEmbed, null, true, 'UTC');
 };
