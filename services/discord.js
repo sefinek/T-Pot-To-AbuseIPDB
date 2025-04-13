@@ -26,7 +26,7 @@ module.exports = async (id, description) => {
 		headers: { 'Content-Type': 'application/json' },
 		data: {
 			embeds: [{
-				title: `${logType.emoji} ${SERVER_ID}: ${logType.type} [ID ${id}]`,
+				title: `${logType.emoji} ${SERVER_ID ? `${SERVER_ID}: ` : ''}${logType.type} [ID ${id}]`,
 				description: description.replace(/(\b\w+=)/g, '**$1**'),
 				color: logType.color,
 				footer: {
