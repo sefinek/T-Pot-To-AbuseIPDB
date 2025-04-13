@@ -45,7 +45,7 @@ const loadBufferFromFile = () => {
 			loaded++;
 		}
 
-		log(0, `📂 Loaded ${loaded} IPs from buffer file (${BUFFER_FILE})`, 1);
+		log(0, `📂 Loaded ${loaded} IPs from ${BUFFER_FILE}`, 1);
 	} catch (err) {
 		log(1, `❌ Failed to parse buffer file: ${err.message}`, 1);
 	} finally {
