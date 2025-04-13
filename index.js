@@ -27,7 +27,7 @@ let RATELIMIT_RESET = nextRateLimitReset();
 const checkRateLimit = () => {
 	const now = Date.now();
 	if (now - LAST_STATS_LOG >= BUFFER_STATS_INTERVAL && BULK_REPORT_BUFFER.size > 0) {
-		log(0, `📊 Buffer size: ${BULK_REPORT_BUFFER.size} IP(s) currently queued`);
+		log(0, `📊 Buffer size: ${BULK_REPORT_BUFFER.size} IPs currently queued`);
 		LAST_STATS_LOG = now;
 	}
 
@@ -121,7 +121,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 	loadBufferFromFile();
 
 	if (BULK_REPORT_BUFFER.size > 0 && !ABUSE_STATE.isLimited) {
-		log(0, `📤 Found ${BULK_REPORT_BUFFER.size} IP(s) in buffer after restart. Sending bulk report...`);
+		log(0, `📤 Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
 		await sendBulkReport();
 	}
 
