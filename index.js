@@ -16,10 +16,13 @@ const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
 
 let LAST_RATELIMIT_LOG = 0;
 let LAST_STATS_LOG = 0;
-let RATELIMIT_RESET = (() => {
+
+const nextRateLimitReset = () => {
 	const now = new Date();
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
-})();
+};
+
+let RATELIMIT_RESET = nextRateLimitReset();
 
 const checkRateLimit = () => {
 	const now = Date.now();
@@ -33,10 +36,9 @@ const checkRateLimit = () => {
 			ABUSE_STATE.isLimited = false;
 			ABUSE_STATE.isBuffering = false;
 			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) sendBulkReport();
-
-			const current = new Date();
-			RATELIMIT_RESET = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1, 0, 1));
+			RATELIMIT_RESET = nextRateLimitReset();
 			ABUSE_STATE.sentBulk = false;
+
 			log(0, `✅ Rate limit reset. Next reset scheduled at ${RATELIMIT_RESET.toISOString()}`, 1);
 		} else if (now - LAST_RATELIMIT_LOG >= RATE_LIMIT_LOG_INTERVAL) {
 			const minutesLeft = Math.ceil((RATELIMIT_RESET.getTime() - now) / 60000);
@@ -48,8 +50,8 @@ const checkRateLimit = () => {
 
 const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`, 1);
-	if (getServerIPs().includes(srcIp)) return;
 
+	if (getServerIPs().includes(srcIp)) return;
 	if (DEBUG_MODE) log(0, `${honeypot} -> Checking if ${srcIp} was reported recently...`);
 	if (isIPReportedRecently(srcIp)) {
 		if (DEBUG_MODE) log(0, `${honeypot} -> Skipping ${srcIp}, already reported recently`);
@@ -88,8 +90,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 				ABUSE_STATE.isBuffering = true;
 				ABUSE_STATE.sentBulk = false;
 				LAST_RATELIMIT_LOG = Date.now();
-				const now = new Date();
-				RATELIMIT_RESET = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 1));
+				RATELIMIT_RESET = nextRateLimitReset();
 				log(0, `🚫 Daily AbuseIPDB limit reached. Buffering reports until ${RATELIMIT_RESET.toISOString()}`, 1);
 			}
 
@@ -100,12 +101,14 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timesta
 
 			BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 			saveBufferToFile();
+
 			log(0, `${honeypot} -> ✋ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
+			const status = err.response?.status ?? 'unknown';
 			log(
-				err.response?.status === 429 ? 0 : 2,
-				`${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`,
-				err.response?.status === 429 ? 0 : 1
+				status === 429 ? 0 : 2,
+				`${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}];\n${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`,
+				status === 429 ? 0 : 1
 			);
 		}
 	}
