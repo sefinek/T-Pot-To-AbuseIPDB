@@ -136,7 +136,7 @@ const checkRateLimit = () => {
 	}
 };
 
-const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
+const reportIp = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A', timestamp }, categories, comment) => {
 	if (!srcIp) return log(2, `${honeypot} -> ⛔ Missing source IP (srcIp)`, 1);
 	if (getServerIPs().includes(srcIp)) return;
 
@@ -192,7 +192,11 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 			saveBufferToFile();
 			log(0, `${honeypot} -> ⏳ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
-			log(err.response?.status === 429 ? 0 : 2, `${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`, 1);
+			log(
+				err.response?.status === 429 ? 0 : 2,
+				`${honeypot} -> ❌ Failed to report ${srcIp} [${dpt}/${service}]; ${err.response?.data?.errors ? `\n${JSON.stringify(err.response.data.errors)}` : err.message}`,
+				err.response?.status === 429 ? 0 : 1
+			);
 		}
 	}
 };
@@ -218,12 +222,12 @@ const reportToAbuseIPDb = async (honeypot, { srcIp, dpt = 'N/A', service = 'N/A'
 	await refreshServerIPs();
 	log(0, `✅ Retrieved ${getServerIPs()?.length} IP address(es) for this machine`);
 
-	require('./data/dionaea.js')(reportToAbuseIPDb);
-	require('./data/honeytrap.js')(reportToAbuseIPDb);
-	require('./data/cowrie.js')(reportToAbuseIPDb);
+	require('./data/dionaea.js')(reportIp);
+	require('./data/honeytrap.js')(reportIp);
+	require('./data/cowrie.js')(reportIp);
 
 	if (SERVER_ID !== 'development') await discordWebhooks(0, `T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`);
 	process.send?.('ready');
 })();
 
-module.exports = reportToAbuseIPDb;
+module.exports = reportIp;
