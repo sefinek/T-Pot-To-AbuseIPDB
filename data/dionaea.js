@@ -61,7 +61,7 @@ const getReportDetails = (entry, dpt) => {
 	return { service: proto.toUpperCase(), comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp };
 };
 
-module.exports = report => {
+module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
 		log(2, `DIONAEA -> Log file not found: ${LOG_FILE}`, 1);
 		return;
@@ -99,7 +99,7 @@ module.exports = report => {
 				if (!srcIp || !dpt) return;
 
 				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
-				await report('DIONAEA', { srcIp, dpt, service, timestamp }, categories, comment);
+				await reportIp('DIONAEA', { srcIp, dpt, service, timestamp }, categories, comment);
 			} catch (err) {
 				log(2, err);
 			}

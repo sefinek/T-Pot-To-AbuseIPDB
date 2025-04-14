@@ -14,7 +14,7 @@ const REPORT_DELAY = SERVER_ID === 'development' ? 30 * 1000 : 10 * 60 * 1000;
 let fileOffset = 0;
 const ipBuffers = new Map();
 
-const flushIpBuffer = async (ip, report) => {
+const flushIpBuffer = async (ip, reportIp) => {
 	const buffer = ipBuffers.get(ip);
 	if (!buffer) return;
 
@@ -81,7 +81,7 @@ const flushIpBuffer = async (ip, report) => {
 	if (suspiciousDownloadHash) lines.push(`• SHA256 of suspicious file: ${suspiciousDownloadHash}`);
 
 	const comment = lines.join('\n');
-	await report('COWRIE', {
+	await reportIp('COWRIE', {
 		srcIp: ip,
 		dpt: port,
 		service: proto.toUpperCase(),
@@ -90,7 +90,7 @@ const flushIpBuffer = async (ip, report) => {
 	await sendWebhook(3, comment);
 };
 
-const processCowrieLogLine = async (entry, report) => {
+const processCowrieLogLine = async (entry, reportIp) => {
 	const ip = entry?.src_ip;
 	const sessionId = entry?.session;
 	const { eventid } = entry;
@@ -100,7 +100,7 @@ const processCowrieLogLine = async (entry, report) => {
 	if (!buffer) {
 		buffer = {
 			sessions: [],
-			timer: setTimeout(() => flushIpBuffer(ip, report), REPORT_DELAY),
+			timer: setTimeout(() => flushIpBuffer(ip, reportIp), REPORT_DELAY),
 			reportPendingLogged: false,
 		};
 		ipBuffers.set(ip, buffer);
@@ -172,7 +172,7 @@ const processCowrieLogLine = async (entry, report) => {
 	}
 };
 
-module.exports = report => {
+module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
 		log(2, `COWRIE -> Log file not found: ${LOG_FILE}`, 1);
 		return;
@@ -207,7 +207,7 @@ module.exports = report => {
 			}
 
 			try {
-				await processCowrieLogLine(entry, report);
+				await processCowrieLogLine(entry, reportIp);
 			} catch (err) {
 				log(2, err);
 			}
