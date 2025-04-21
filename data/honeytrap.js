@@ -152,8 +152,8 @@ module.exports = reportIp => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				log(2, `COWRIE -> JSON parse error: ${err.message}`, 1);
-				log(2, `COWRIE -> Faulty line: ${JSON.stringify(line)}`);
+				log(2, `HONEYTRAP -> JSON parse error: ${err.message}`, 1);
+				log(2, `HONEYTRAP -> Faulty line: ${JSON.stringify(line)}`);
 				return;
 			}
 
@@ -175,7 +175,7 @@ module.exports = reportIp => {
 					attackBuffer.set(key, { count, service, timestamp, categories, comment });
 				}
 
-				log(0, `COWRIE -> ${srcIp} on ${dpt} | attempts: ${count}`);
+				log(0, `HONEYTRAP -> ${srcIp} on ${dpt} | attempts: ${count}`);
 
 				const now = Date.now();
 				if (now - lastFlushTime >= 15 * 60 * 1000) {
