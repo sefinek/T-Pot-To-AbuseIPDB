@@ -70,32 +70,26 @@ const getReportDetails = (entry, dpt) => {
 		categories = '14';
 		comment = `Empty payload on ${dpt}/${proto} (likely service probe)`;
 		break;
-
 	case payloadLen > 1000:
 		categories = '15';
 		comment = `Large payload (${payloadLen} bytes) on ${dpt}/${proto}`;
 		break;
-
 	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
 		categories = '21';
 		comment = parseHttpRequest(hex, dpt);
 		break;
-
 	case ascii.includes('ssh'):
 		categories = '18,22';
 		comment = `SSH handshake/banner on ${dpt}/${proto} (${payloadLen} bytes of payload)`;
 		break;
-
 	case ascii.includes('cookie:'):
 		categories = '21,15';
 		comment = `HTTP header with cookie on ${dpt}/${proto}`;
 		break;
-
 	case (/(admin|root|wget|curl|bash|eval|php|bin)/).test(ascii):
 		categories = '15';
 		comment = `Suspicious payload on ${dpt}/${proto} (possible command injection)`;
 		break;
-
 	default:
 		categories = '14';
 		comment = `Unauthorized traffic on ${dpt}/${proto} (${payloadLen} bytes of payload)`;
@@ -108,13 +102,13 @@ const getReportDetails = (entry, dpt) => {
 const flushReport = async reportIp => {
 	if (!attackBuffer.size) return;
 
-	for (const [, ports] of attackBuffer.entries()) {
+	for (const [srcIp, ports] of attackBuffer.entries()) {
 		const sortedPorts = Array.from(ports.entries())
 			.sort(([, a], [, b]) => b.count - a.count)
 			.slice(0, 6);
 
 		for (const [port, data] of sortedPorts) {
-			await reportIp('HONEYTRAP', { port, count: data.count, service: data.service, timestamp: data.timestamp }, data.categories, data.comment);
+			await reportIp('HONEYTRAP', { srcIp, port, service: data.service, timestamp: data.timestamp }, data.categories, `${data.comment}; ${data.count} attempts`);
 		}
 	}
 
@@ -144,7 +138,7 @@ module.exports = reportIp => {
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
-		rl.on('line', async line => {
+		rl.on('line', line => {
 			let entry;
 			try {
 				entry = JSON.parse(line);
