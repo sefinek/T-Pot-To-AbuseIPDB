@@ -14,12 +14,12 @@ const REPORT_DELAY = SERVER_ID === 'development' ? 30 * 1000 : 10 * 60 * 1000;
 let fileOffset = 0;
 const ipBuffers = new Map();
 
-const flushBuffer = async (ip, reportIp) => {
-	const buffer = ipBuffers.get(ip);
+const flushBuffer = async (srcIp, reportIp) => {
+	const buffer = ipBuffers.get(srcIp);
 	if (!buffer) return;
 
 	clearTimeout(buffer.timer);
-	ipBuffers.delete(ip);
+	ipBuffers.delete(srcIp);
 
 	const allSessions = buffer.sessions;
 	if (allSessions.length === 0) return;
@@ -27,14 +27,10 @@ const flushBuffer = async (ip, reportIp) => {
 	const categories = new Set(['15']);
 	const credsSet = new Set();
 	const commands = [];
-	let port = null;
-	let proto = null;
-	let sshVersion = null;
-	let timestamp = null;
-	let suspiciousDownloadHash = null;
+	let dpt = null, proto = null, sshVersion = null, suspiciousDownloadHash = null, timestamp = null;
 
 	for (const session of allSessions) {
-		port = port || session.port;
+		dpt = dpt || session.dpt;
 		proto = proto || session.proto;
 		sshVersion = sshVersion || session.sshVersion;
 		timestamp = timestamp || session.timestamp;
@@ -56,7 +52,7 @@ const flushBuffer = async (ip, reportIp) => {
 		}
 	}
 
-	if (!ip || !port || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`, 1);
+	if (!srcIp || !dpt || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`, 1);
 
 	const creds = [...credsSet];
 	const loginAttempts = creds.length;
@@ -82,12 +78,12 @@ const flushBuffer = async (ip, reportIp) => {
 
 	const comment = lines.join('\n');
 	await reportIp('COWRIE', {
-		srcIp: ip,
-		dpt: port,
+		srcIp,
+		dpt,
 		service: proto.toUpperCase(),
 		timestamp,
 	}, [...categories].join(','), comment);
-	await sendWebhook(3, `### Cowrie: ${ip} on ${port}/${proto}\n${comment}`);
+	await sendWebhook(3, `### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment}`);
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {
@@ -113,7 +109,7 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		session = {
 			sessionId,
 			srcIp: ip,
-			port: entry.dst_port,
+			dpt: entry.dst_port,
 			proto: entry.protocol,
 			timestamp: entry.timestamp,
 			credentials: new Map(),
@@ -129,9 +125,9 @@ const processCowrieLogLine = async (entry, reportIp) => {
 	switch (eventid) {
 	case 'cowrie.session.connect':
 		if (session) {
-			session.port = entry.dst_port;
+			session.dpt = entry.dst_port;
 			session.proto = entry.protocol;
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: Connect`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.dpt}: Connect`);
 		}
 		break;
 
@@ -140,21 +136,21 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session && (entry.username || entry.password)) {
 			session.credentials.set(`${ipSanitizer(entry.username)}:${ipSanitizer(entry.password)}`, true);
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: ${status} => ${entry.username}:${entry.password}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.dpt}: ${status} => ${entry.username}:${entry.password}`);
 		}
 		break;
 
 	case 'cowrie.client.version':
 		if (session) {
 			session.sshVersion = entry.version;
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: SSH version => ${entry.version}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.dpt}: SSH version => ${entry.version}`);
 		}
 		break;
 
 	case 'cowrie.command.input':
 		if (session && entry.input) {
 			session.commands.push(entry.input);
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: $ ${entry.input}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.dpt}: $ ${entry.input}`);
 		}
 		break;
 
@@ -162,12 +158,12 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session && entry.url) {
 			session.commands.push(`[file download] ${entry.url}`);
 			session.download = { url: entry.url, outfile: entry.outfile };
-			log(0, `COWRIE -> ${ip}/${session.proto}/${session.port}: File download => ${entry.url}`);
+			log(0, `COWRIE -> ${ip}/${session.proto}/${session.dpt}: File download => ${entry.url}`);
 		}
 		break;
 
 	case 'cowrie.session.closed':
-		log(0, `COWRIE -> ${ip}/${session?.proto}/${session?.port}: Session ${sessionId} closed`);
+		log(0, `COWRIE -> ${ip}/${session?.proto}/${session?.dpt}: Session ${sessionId} closed`);
 		break;
 	}
 };
