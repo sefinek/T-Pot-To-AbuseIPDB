@@ -96,7 +96,7 @@ const getReportDetails = (entry, dpt) => {
 		break;
 	}
 
-	return { service: proto, comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp: entry?.['@timestamp'] };
+	return { service: proto, baseComment: comment, categories, timestamp: entry?.['@timestamp'] };
 };
 
 const flushReport = async reportIp => {
@@ -107,9 +107,15 @@ const flushReport = async reportIp => {
 			.sort(([, a], [, b]) => b.count - a.count)
 			.slice(0, 6);
 
-		for (const [port, data] of sortedPorts) {
-			await reportIp('HONEYTRAP', { srcIp, port, service: data.service, timestamp: data.timestamp }, data.categories, `${data.comment}; ${data.count} attempts`);
-		}
+		const proto = sortedPorts[0][1].service || 'tcp';
+		const timestamp = sortedPorts[0][1].timestamp;
+		const baseComment = sortedPorts[0][1].baseComment;
+		const categories = sortedPorts[0][1].categories;
+
+		const portSummary = sortedPorts.map(([port, data]) => `${port} [${data.count}]`).join(', ');
+		const comment = `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${baseComment.replace(/ on \d+\/\w+/, '')}; ${portSummary} ${proto.toUpperCase()}`;
+
+		await reportIp(srcIp, { port: sortedPorts[0][0], count: sortedPorts[0][1].count, service: proto, timestamp }, categories, comment);
 	}
 
 	log(0, `HONEYTRAP -> Flushed ${attackBuffer.size} IPs`);
@@ -153,7 +159,7 @@ module.exports = reportIp => {
 				const dpt = entry?.attack_connection?.local_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
+				const { service, timestamp, categories, baseComment } = getReportDetails(entry, dpt);
 				let ipData = attackBuffer.get(srcIp);
 				if (!ipData) {
 					ipData = new Map();
@@ -164,7 +170,7 @@ module.exports = reportIp => {
 				if (portData) {
 					portData.count++;
 				} else {
-					portData = { count: 1, service, timestamp, categories, comment };
+					portData = { count: 1, service, timestamp, categories, baseComment };
 					ipData.set(dpt, portData);
 				}
 

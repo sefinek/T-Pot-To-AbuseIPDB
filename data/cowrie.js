@@ -52,7 +52,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 		}
 	}
 
-	if (!srcIp || !dpt || !proto) return log(1, `COWRIE -> Incomplete data for ${ip}, discarded`, 1);
+	if (!srcIp || !dpt || !proto) return log(1, `COWRIE -> Incomplete data for ${srcIp}, discarded`, 1);
 
 	const creds = [...credsSet];
 	const loginAttempts = creds.length;
@@ -64,7 +64,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 	if (loginAttempts === 0 && cmdCount === 0) categories.add('14');
 
 	const lines = [];
-	lines.push(`Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${creds.length >= 1 ? 'Brute-force attack' : 'Unauthorized connection attempt'} detected on ${port}/${proto.toUpperCase()}`);
+	lines.push(`Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${creds.length >= 1 ? 'Brute-force attack' : 'Unauthorized connection attempt'} detected on ${dpt}/${proto.toUpperCase()}`);
 	if (creds.length === 1) {
 		lines.push(`• Credential used: ${creds[0]}`);
 	} else if (creds.length > 1) {
