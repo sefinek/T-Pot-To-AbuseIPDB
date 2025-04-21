@@ -10,7 +10,7 @@ const LOG_FILE = path.resolve(HONEYTRAP_LOG_FILE);
 let fileOffset = 0;
 let lastFlushTime = Date.now();
 
-const attackBuffer = new Map(); // key = `${ip}-${port}`, value = { count, service, timestamp, categories, comment }
+const attackBuffer = new Map();
 
 const HEADER_PRIORITY = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
 const capitalizeHeader = header => header.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-');
@@ -108,21 +108,17 @@ const getReportDetails = (entry, dpt) => {
 const flushReport = async reportIp => {
 	if (!attackBuffer.size) return;
 
-	const grouped = {};
-	for (const [key, value] of attackBuffer) {
-		const [ip, port] = key.split('-');
-		if (!grouped[ip]) grouped[ip] = [];
-		grouped[ip].push({ port, ...value });
-	}
+	for (const [, ports] of attackBuffer.entries()) {
+		const sortedPorts = Array.from(ports.entries())
+			.sort(([, a], [, b]) => b.count - a.count)
+			.slice(0, 6);
 
-	for (const ip in grouped) {
-		const topPorts = grouped[ip].sort((a, b) => b.count - a.count).slice(0, 6);
-		for (const p of topPorts) {
-			await reportIp(ip, { port: p.port, count: p.count, service: p.service, timestamp: p.timestamp, categories: p.categories, comment: p.comment });
+		for (const [port, data] of sortedPorts) {
+			await reportIp('HONEYTRAP', { port, count: data.count, service: data.service, timestamp: data.timestamp }, data.categories, data.comment);
 		}
 	}
 
-	log(0, `HONEYTRAP -> Flushed ${attackBuffer.size} entries`);
+	log(0, `HONEYTRAP -> Flushed ${attackBuffer.size} IPs`);
 	attackBuffer.clear();
 };
 
@@ -163,20 +159,22 @@ module.exports = reportIp => {
 				const dpt = entry?.attack_connection?.local_port;
 				if (!srcIp || !dpt) return;
 
-				const key = `${srcIp}-${dpt}`;
 				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
-
-				const existing = attackBuffer.get(key);
-				let count;
-				if (existing) {
-					existing.count++;
-					count = existing.count;
-				} else {
-					count = 1;
-					attackBuffer.set(key, { count, service, timestamp, categories, comment });
+				let ipData = attackBuffer.get(srcIp);
+				if (!ipData) {
+					ipData = new Map();
+					attackBuffer.set(srcIp, ipData);
 				}
 
-				log(0, `HONEYTRAP -> ${srcIp} on ${dpt} | attempts: ${count}`);
+				let portData = ipData.get(dpt);
+				if (portData) {
+					portData.count++;
+				} else {
+					portData = { count: 1, service, timestamp, categories, comment };
+					ipData.set(dpt, portData);
+				}
+
+				log(0, `HONEYTRAP -> ${srcIp} on ${dpt} | attempts: ${portData.count}`);
 			} catch (err) {
 				log(2, err);
 			}
