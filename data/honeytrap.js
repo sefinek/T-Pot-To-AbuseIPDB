@@ -175,7 +175,7 @@ module.exports = reportIp => {
 					attackBuffer.set(key, { count, service, timestamp, categories, comment });
 				}
 
-				log(2, `COWRIE -> ${srcIp} on ${dpt} | attempts: ${count}`);
+				log(0, `COWRIE -> ${srcIp} on ${dpt} | attempts: ${count}`);
 
 				const now = Date.now();
 				if (now - lastFlushTime >= 15 * 60 * 1000) {
