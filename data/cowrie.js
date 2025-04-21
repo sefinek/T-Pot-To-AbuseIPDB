@@ -14,7 +14,7 @@ const REPORT_DELAY = SERVER_ID === 'development' ? 30 * 1000 : 10 * 60 * 1000;
 let fileOffset = 0;
 const ipBuffers = new Map();
 
-const flushIpBuffer = async (ip, reportIp) => {
+const flushBuffer = async (ip, reportIp) => {
 	const buffer = ipBuffers.get(ip);
 	if (!buffer) return;
 
@@ -100,7 +100,7 @@ const processCowrieLogLine = async (entry, reportIp) => {
 	if (!buffer) {
 		buffer = {
 			sessions: [],
-			timer: setTimeout(() => flushIpBuffer(ip, reportIp), REPORT_DELAY),
+			timer: setTimeout(() => flushBuffer(ip, reportIp), REPORT_DELAY),
 			reportPendingLogged: false,
 		};
 		ipBuffers.set(ip, buffer);

@@ -8,9 +8,12 @@ const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(HONEYTRAP_LOG_FILE);
 let fileOffset = 0;
+let lastFlushTime = Date.now();
+
+const attackBuffer = new Map(); // key = `${ip}-${port}`, value = { count, service, timestamp, categories, comment }
 
 const HEADER_PRIORITY = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
-const capitalizeHeader = header => header.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('-');
+const capitalizeHeader = header => header.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-');
 
 const parseHttpRequest = (hex, dpt) => {
 	const raw = Buffer.from(hex, 'hex').toString('utf8');
@@ -102,6 +105,26 @@ const getReportDetails = (entry, dpt) => {
 	return { service: proto, comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp: entry?.['@timestamp'] };
 };
 
+const flushReport = async reportIp => {
+	if (!attackBuffer.size) return;
+
+	const grouped = {};
+	for (const [key, value] of attackBuffer) {
+		const [ip, port] = key.split('-');
+		if (!grouped[ip]) grouped[ip] = [];
+		grouped[ip].push({ port, ...value });
+	}
+
+	for (const ip in grouped) {
+		const topPorts = grouped[ip].sort((a, b) => b.count - a.count).slice(0, 6);
+		for (const p of topPorts) {
+			await reportIp(ip, { port: p.port, count: p.count, service: p.service, timestamp: p.timestamp, categories: p.categories, comment: p.comment });
+		}
+	}
+
+	attackBuffer.clear();
+};
+
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
 		log(2, `HONEYTRAP -> Log file not found: ${LOG_FILE}`, 1);
@@ -139,8 +162,21 @@ module.exports = reportIp => {
 				const dpt = entry?.attack_connection?.local_port;
 				if (!srcIp || !dpt) return;
 
+				const key = `${srcIp}-${dpt}`;
 				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
-				await reportIp('HONEYTRAP', { srcIp, dpt, service, timestamp }, categories, comment);
+
+				const existing = attackBuffer.get(key);
+				if (existing) {
+					existing.count++;
+				} else {
+					attackBuffer.set(key, { count: 1, service, timestamp, categories, comment });
+				}
+
+				const now = Date.now();
+				if (now - lastFlushTime >= 15 * 60 * 1000) {
+					await flushReport(reportIp);
+					lastFlushTime = now;
+				}
 			} catch (err) {
 				log(2, err);
 			}
