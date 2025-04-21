@@ -166,11 +166,16 @@ module.exports = reportIp => {
 				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
 
 				const existing = attackBuffer.get(key);
+				let count;
 				if (existing) {
 					existing.count++;
+					count = existing.count;
 				} else {
-					attackBuffer.set(key, { count: 1, service, timestamp, categories, comment });
+					count = 1;
+					attackBuffer.set(key, { count, service, timestamp, categories, comment });
 				}
+
+				log(2, `COWRIE -> ${srcIp} on ${dpt} | attempts: ${count}`);
 
 				const now = Date.now();
 				if (now - lastFlushTime >= 15 * 60 * 1000) {
