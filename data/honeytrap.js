@@ -122,6 +122,7 @@ const flushReport = async reportIp => {
 		}
 	}
 
+	log(0, `HONEYTRAP -> Flushed ${attackBuffer.size} entries`);
 	attackBuffer.clear();
 };
 
@@ -176,12 +177,6 @@ module.exports = reportIp => {
 				}
 
 				log(0, `HONEYTRAP -> ${srcIp} on ${dpt} | attempts: ${count}`);
-
-				const now = Date.now();
-				if (now - lastFlushTime >= 15 * 60 * 1000) {
-					await flushReport(reportIp);
-					lastFlushTime = now;
-				}
 			} catch (err) {
 				log(2, err);
 			}
@@ -189,6 +184,13 @@ module.exports = reportIp => {
 
 		rl.on('close', () => fileOffset = stats.size);
 	});
+
+	setInterval(async () => {
+		if (Date.now() >= lastFlushTime + 15 * 60 * 1000) {
+			await flushReport(reportIp);
+			lastFlushTime = Date.now();
+		}
+	}, 60 * 1000);
 
 	log(0, '🛡️ HONEYTRAP -> Watcher initialized');
 };
