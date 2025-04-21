@@ -3,7 +3,6 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
-const sendWebhook = require('../services/discordWebhooks.js');
 const log = require('../utils/log.js');
 const ipSanitizer = require('../utils/ipSanitizer.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
@@ -83,7 +82,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 		service: proto.toUpperCase(),
 		timestamp,
 	}, [...categories].join(','), comment);
-	await sendWebhook(3, `### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment}`);
+	log(3, `### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment}`, 2);
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {

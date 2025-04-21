@@ -7,8 +7,10 @@ const levels = {
 };
 
 module.exports = (level, msg, discord = 0) => {
-	const { method } = levels[level] || { method: 'log' };
-	console[method](`${msg}`);
+	if (discord !== 2) {
+		const { method } = levels[level] || levels[0];
+		console[method](`${msg}`);
+	}
 
-	if (discord) sendWebhook(level, msg).catch(console.error);
+	if (discord === 1 || discord === 2) sendWebhook(level, msg).catch(console.error);
 };
