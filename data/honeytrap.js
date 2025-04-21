@@ -113,7 +113,7 @@ module.exports = reportIp => {
 	chokidar.watch(LOG_FILE, {
 		persistent: true,
 		ignoreInitial: true,
-		awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 },
+		awaitWriteFinish: { stabilityThreshold: 1000, pollInterval: 300 },
 		alwaysStat: true,
 		atomic: true,
 	}).on('change', file => {
