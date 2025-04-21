@@ -66,5 +66,5 @@ const summaryEmbed = async () => {
 
 module.exports = async () => {
 	// await summaryEmbed();
-	new CronJob('0 0 * * *', summaryEmbed, null, true, 'UTC');
+	new CronJob('0 0 * * *', summaryEmbed, null, true);
 };

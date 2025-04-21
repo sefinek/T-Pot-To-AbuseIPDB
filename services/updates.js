@@ -7,4 +7,4 @@ const checkForUpdates = async () => {
 };
 
 // https://crontab.guru
-new CronJob(AUTO_UPDATE_SCHEDULE, checkForUpdates, null, true, 'UTC');
+new CronJob(AUTO_UPDATE_SCHEDULE, checkForUpdates, null, true);
