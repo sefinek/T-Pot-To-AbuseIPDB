@@ -35,7 +35,7 @@ const getReportDetails = (entry, dpt) => {
 		break;
 	case 'ftp':
 		categories = '5,18';
-		comment = `FTP brute-force attempt on port ${dpt}`;
+		comment = `FTP brute-force or probing on port ${dpt}`;
 		break;
 	case 'smbd':
 		categories = '23';
@@ -55,7 +55,7 @@ const getReportDetails = (entry, dpt) => {
 		break;
 	default:
 		categories = '14';
-		comment = `Unauthorized or unknown traffic on ${dpt} (${proto})`;
+		comment = `Unauthorized traffic on ${dpt}/${proto}`;
 	}
 
 	return { service: proto.toUpperCase(), comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp };
