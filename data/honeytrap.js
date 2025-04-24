@@ -115,7 +115,7 @@ const flushReport = async reportIp => {
 		const portSummary = sortedPorts.map(([port, data]) => `${port} [${data.count}]`).join(', ');
 		const comment = `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${baseComment.replace(/ on \d+\/\w+/, '')}; ${portSummary} ${proto.toUpperCase()}`;
 
-		await reportIp('HONEYPOT', { srcIp, dpt: sortedPorts[0][0], service: proto, timestamp }, categories, comment);
+		await reportIp('HONEYTRAP', { srcIp, dpt: sortedPorts[0][0], service: proto, timestamp }, categories, comment);
 	}
 
 	log(0, `HONEYTRAP -> Flushed ${attackBuffer.size} IPs`);
