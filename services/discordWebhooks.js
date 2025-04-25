@@ -1,5 +1,4 @@
 const axios = require('axios');
-const log = require('../utils/log.js');
 const { repoFull } = require('../utils/repo.js');
 const { SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = require('../config.js').MAIN;
 
@@ -10,7 +9,7 @@ const COLORS = {
 	3: 0x266CFB, // Blue
 };
 
-module.exports = async (id, description) => {
+module.exports = async (id, description, log) => {
 	if (!DISCORD_WEBHOOKS_ENABLED || !DISCORD_WEBHOOKS_URL) return;
 
 	const config = {

@@ -1,16 +1,13 @@
 const sendWebhook = require('../services/discordWebhooks.js');
 
-const levels = {
-	0: { method: 'log' },
-	1: { method: 'warn' },
-	2: { method: 'error' },
-};
+const METHODS = ['log', 'warn', 'error'];
 
-module.exports = (level, msg, discord = 0) => {
-	if (discord !== 2) {
-		const { method } = levels[level] || levels[0];
-		console[method](`${msg}`);
+const logger = (level = 0, msg, discord = 0) => {
+	if (discord !== 2) console[METHODS[level] || 'log'](msg);
+
+	if (discord) {
+		sendWebhook(level, msg, logger).catch(console.error);
 	}
-
-	if (discord === 1 || discord === 2) sendWebhook(level, msg).catch(console.error);
 };
+
+module.exports = logger;
