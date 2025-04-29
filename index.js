@@ -53,7 +53,6 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		if (EXTENDED_LOGS) log(`Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
 		return;
 	}
-
 	if (isIPReportedRecently(srcIp)) return;
 
 	await checkRateLimit();
@@ -77,7 +76,8 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 		markIPAsReported(srcIp);
 		await saveReportedIPs();
-		log(`${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`);
+
+		log(`${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`, 1);
 	} catch (err) {
 		const status = err.response?.status ?? 'unknown';
 		if (status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {

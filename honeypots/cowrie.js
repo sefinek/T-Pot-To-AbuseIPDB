@@ -79,7 +79,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 	await reportIp('COWRIE', {
 		srcIp,
 		dpt,
-		service: proto.toUpperCase(),
+		proto,
 		timestamp,
 	}, [...categories].join(','), comment);
 

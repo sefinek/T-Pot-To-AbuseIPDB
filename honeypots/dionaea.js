@@ -58,7 +58,7 @@ const getReportDetails = (entry, dpt) => {
 		comment = `Unauthorized traffic on ${dpt}/${proto}`;
 	}
 
-	return { service: proto.toUpperCase(), comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp };
+	return { proto: proto.toUpperCase(), comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp };
 };
 
 module.exports = reportIp => {
@@ -98,8 +98,8 @@ module.exports = reportIp => {
 				const dpt = entry?.dst_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
-				await reportIp('DIONAEA', { srcIp, dpt, service, timestamp }, categories, comment);
+				const { proto, timestamp, categories, comment } = getReportDetails(entry, dpt);
+				await reportIp('DIONAEA', { srcIp, dpt, proto, timestamp }, categories, comment);
 			} catch (err) {
 				log(err, 3);
 			}

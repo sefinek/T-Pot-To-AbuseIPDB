@@ -96,7 +96,7 @@ const getReportDetails = (entry, dpt) => {
 		break;
 	}
 
-	return { service: proto, baseComment: comment, categories, timestamp: entry?.['@timestamp'] };
+	return { proto, baseComment: comment, categories, timestamp: entry?.['@timestamp'] };
 };
 
 const flushReport = async reportIp => {
@@ -107,7 +107,7 @@ const flushReport = async reportIp => {
 			.sort(([, a], [, b]) => b.count - a.count)
 			.slice(0, 6);
 
-		const proto = sortedPorts[0][1].service || 'tcp';
+		const proto = sortedPorts[0][1].proto || 'tcp';
 		const timestamp = sortedPorts[0][1].timestamp;
 		const baseComment = sortedPorts[0][1].baseComment;
 		const categories = sortedPorts[0][1].categories;
@@ -115,7 +115,7 @@ const flushReport = async reportIp => {
 		const portSummary = sortedPorts.map(([port, data]) => `${port} [${data.count}]`).join(', ');
 		const comment = `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${baseComment.replace(/ on \d+\/\w+/, '')}; ${portSummary} ${proto.toUpperCase()}`;
 
-		await reportIp('HONEYTRAP', { srcIp, dpt: sortedPorts[0][0], service: proto, timestamp }, categories, comment);
+		await reportIp('HONEYTRAP', { srcIp, dpt: sortedPorts[0][0], proto, timestamp }, categories, comment);
 	}
 
 	log(`HONEYTRAP -> Flushed ${attackBuffer.size} IPs`, 1);
@@ -159,7 +159,7 @@ module.exports = reportIp => {
 				const dpt = entry?.attack_connection?.local_port;
 				if (!srcIp || !dpt) return;
 
-				const { service, timestamp, categories, baseComment } = getReportDetails(entry, dpt);
+				const { proto, timestamp, categories, baseComment } = getReportDetails(entry, dpt);
 				let ipData = attackBuffer.get(srcIp);
 				if (!ipData) {
 					ipData = new Map();
@@ -170,7 +170,7 @@ module.exports = reportIp => {
 				if (portData) {
 					portData.count++;
 				} else {
-					portData = { count: 1, service, timestamp, categories, baseComment };
+					portData = { count: 1, proto, timestamp, categories, baseComment };
 					ipData.set(dpt, portData);
 				}
 
