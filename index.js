@@ -47,7 +47,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	const ips = getServerIPs();
 	if (!Array.isArray(ips)) return log(`For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, 3, true);
 
-	if (ips.includes(srcIp)) return log(`Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} `, 2, true);
+	if (ips.includes(srcIp)) return log(`Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 2, true);
 	if (isLocalIP(srcIp)) return log(`Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 2, true);
 	if (proto === 'UDP') {
 		if (EXTENDED_LOGS) log(`Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
@@ -62,7 +62,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		if (BULK_REPORT_BUFFER.has(srcIp)) return;
 
 		BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
-		saveBufferToFile();
+		await saveBufferToFile();
 		log(`${honeypot} -> 💾 Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`);
 		return;
 	}
@@ -76,10 +76,11 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		}), { headers: { Key: ABUSEIPDB_API_KEY } });
 
 		markIPAsReported(srcIp);
-		saveReportedIPs();
+		await saveReportedIPs();
 		log(`${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Score: ${res.data.abuseConfidenceScore}%`);
 	} catch (err) {
-		if (err.response?.status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
+		const status = err.response?.status ?? 'unknown';
+		if (status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
 			if (!ABUSE_STATE.isLimited) {
 				ABUSE_STATE.isLimited = true;
 				ABUSE_STATE.isBuffering = true;
@@ -95,11 +96,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 			}
 
 			BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
-			saveBufferToFile();
-
+			await saveBufferToFile();
 			log(`${honeypot} -> ✋ Queued ${srcIp} for bulk report due to rate limit`);
 		} else {
-			const status = err.response?.status ?? 'unknown';
 			log(`Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`, status === 429 ? 0 : 3);
 		}
 	}
@@ -108,8 +107,8 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 (async () => {
 	log(`🚀 T-Pot AbuseIPDB Reporter v${version} (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
 
-	loadReportedIPs();
-	loadBufferFromFile();
+	await loadReportedIPs();
+	await loadBufferFromFile();
 
 	if (BULK_REPORT_BUFFER.size > 0 && !ABUSE_STATE.isLimited) {
 		log(`Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
