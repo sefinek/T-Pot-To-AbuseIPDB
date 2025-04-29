@@ -112,9 +112,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	await refreshServerIPs();
 	log(`Retrieved ${getServerIPs()?.length} IP address(es) for this machine`, 1);
 
-	require('./data/dionaea.js')(reportIp);
-	require('./data/honeytrap.js')(reportIp);
-	require('./data/cowrie.js')(reportIp);
+	require('./honeypots/dionaea.js')(reportIp);
+	require('./honeypots/honeytrap.js')(reportIp);
+	require('./honeypots/cowrie.js')(reportIp);
 
 	if (SERVER_ID !== 'development') log(`T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`, 1);
 	process.send?.('ready');
