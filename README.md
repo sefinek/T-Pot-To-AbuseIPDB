@@ -39,5 +39,13 @@ Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Encoding: identity; 8800 [2] TCP
 ```
 
+```text
+Honeypot hit: HTTP/1.1 request on 13261
+
+CONNECT myip.wtf:443
+User-Agent: Go-http-client/1.1; 13261 [2] TCP
+```
+
+
 ## Useful links
 - https://www.abuseipdb.com/categories
