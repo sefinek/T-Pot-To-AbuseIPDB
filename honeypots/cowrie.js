@@ -82,7 +82,9 @@ const flushBuffer = async (srcIp, reportIp) => {
 		service: proto.toUpperCase(),
 		timestamp,
 	}, [...categories].join(','), comment);
-	log(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment}`, 0, true);
+
+	const [firstLine, ...restLines] = comment.split('\n');
+	log(`### ${firstLine}\n${restLines.join('\n')}`, 0, true);
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {
