@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
-const log = require('../utils/log.js');
+const log = require('../scripts/log.js');
 const { DIONAEA_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(DIONAEA_LOG_FILE);
@@ -63,7 +63,7 @@ const getReportDetails = (entry, dpt) => {
 
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
-		log(2, `DIONAEA -> Log file not found: ${LOG_FILE}`, 1);
+		log(`DIONAEA -> Log file not found: ${LOG_FILE}`, 3, true);
 		return;
 	}
 
@@ -79,7 +79,7 @@ module.exports = reportIp => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			return log(0, 'DIONAEA -> Log truncated, offset reset', 1);
+			return log('DIONAEA -> Log truncated, offset reset', 2, true);
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
@@ -88,8 +88,8 @@ module.exports = reportIp => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				log(2, `DIONAEA -> JSON parse error: ${err.message}`, 1);
-				log(2, `DIONAEA -> Faulty line: ${JSON.stringify(line)}`);
+				log(`DIONAEA -> JSON parse error: ${err.message}`, 3, true);
+				log(`DIONAEA -> Faulty line: ${JSON.stringify(line)}`, 3, true);
 				return;
 			}
 
@@ -101,12 +101,12 @@ module.exports = reportIp => {
 				const { service, timestamp, categories, comment } = getReportDetails(entry, dpt);
 				await reportIp('DIONAEA', { srcIp, dpt, service, timestamp }, categories, comment);
 			} catch (err) {
-				log(2, err);
+				log(err, 3);
 			}
 		});
 
 		rl.on('close', () => fileOffset = stats.size);
 	});
 
-	log(0, '🛡️ DIONAEA -> Watcher initialized');
+	log('🛡️ DIONAEA -> Watcher initialized', 1);
 };
