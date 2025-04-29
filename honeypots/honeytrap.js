@@ -174,7 +174,7 @@ module.exports = reportIp => {
 					ipData.set(dpt, portData);
 				}
 
-				log(`HONEYTRAP -> ${srcIp} on ${dpt} | attempts: ${portData.count}`);
+				log(`HONEYTRAP -> ${srcIp} on ${dpt} | ${portData.count} attempt${portData.count === 1 ? '' : 's'}`);
 			} catch (err) {
 				log(err, 3);
 			}
