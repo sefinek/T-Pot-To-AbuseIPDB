@@ -83,8 +83,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 		timestamp,
 	}, [...categories].join(','), comment);
 
-	const [firstLine, ...restLines] = comment.split('\n');
-	log(`### ${firstLine}\n${restLines.join('\n')}`, 0, true);
+	log(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment.split('\n').slice(1).join('\n')}`, 0, true);
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {
