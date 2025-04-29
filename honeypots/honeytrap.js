@@ -184,7 +184,7 @@ module.exports = reportIp => {
 	});
 
 	setInterval(async () => {
-		if (Date.now() >= lastFlushTime + 15 * 60 * 1000) {
+		if (Date.now() >= lastFlushTime + 5 * 60 * 1000) {
 			await flushReport(reportIp);
 			lastFlushTime = Date.now();
 		}
