@@ -1,12 +1,13 @@
 const axios = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
-const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
+const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
+const { version } = require('./scripts/repo.js');
+const isLocalIP = require('./scripts/isLocalIP.js');
 const log = require('./scripts/log.js');
 const config = require('./config.js');
-const { version } = require('./package.json');
 const formatTimestamp = require('./scripts/formatTimestamp.js');
-const { ABUSEIPDB_API_KEY, SERVER_ID, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
+const { ABUSEIPDB_API_KEY, SERVER_ID, EXTENDED_LOGS, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
@@ -41,7 +42,17 @@ const checkRateLimit = () => {
 };
 
 const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp }, categories, comment) => {
-	if (!srcIp) return log(`${honeypot} -> ⛔ Missing source IP (srcIp)`, 3, true);
+	if (!srcIp) return log(`${honeypot} -> Missing source IP (srcIp)`, 3, true);
+
+	const ips = getServerIPs();
+	if (!Array.isArray(ips)) return log(`For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, 3, true);
+
+	if (ips.includes(srcIp)) return log(`Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt} `, 2, true);
+	if (isLocalIP(srcIp)) return log(`Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 2, true);
+	if (proto === 'UDP') {
+		if (EXTENDED_LOGS) log(`Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
+		return;
+	}
 
 	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
