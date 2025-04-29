@@ -2,12 +2,13 @@ const axios = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
-const { version } = require('./scripts/repo.js');
+const { name, version, repoFullUrl } = require('./scripts/repo.js');
+const sendWebhook = require('./scripts/services/discordWebhooks.js');
 const isLocalIP = require('./scripts/isLocalIP.js');
 const log = require('./scripts/log.js');
 const config = require('./config.js');
 const formatTimestamp = require('./scripts/formatTimestamp.js');
-const { ABUSEIPDB_API_KEY, SERVER_ID, EXTENDED_LOGS, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
+const { ABUSEIPDB_API_KEY, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOKS_ENABLED, DISCORD_WEBHOOKS_URL } = config.MAIN;
 
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
@@ -107,6 +108,14 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 (async () => {
 	log(`🚀 T-Pot AbuseIPDB Reporter v${version} (https://github.com/sefinek/T-Pot-AbuseIPDB-Reporter)`);
 
+	// Auto updates
+	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') {
+		await require('./scripts/services/updates.js')();
+	} else {
+		await require('./scripts/services/version.js')();
+	}
+
+	// Bulk
 	await loadReportedIPs();
 	await loadBufferFromFile();
 
@@ -115,17 +124,22 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		await sendBulkReport();
 	}
 
-	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./scripts/services/summaries.js')();
-
+	// Fetch IPs
 	log('Fetching public IP addresses from api.sefinek.net...');
 	await refreshServerIPs();
 	log(`Retrieved ${getServerIPs()?.length} IP address(es) for this machine`, 1);
 
+	// Watch
 	require('./honeypots/dionaea.js')(reportIp);
 	require('./honeypots/honeytrap.js')(reportIp);
 	require('./honeypots/cowrie.js')(reportIp);
 
-	if (SERVER_ID !== 'development') log(`T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`, 1);
+	// Summaries
+	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./scripts/services/summaries.js')();
+
+	// Ready
+	await sendWebhook(`[${name}](${repoFullUrl}) has been successfully started on the device \`${SERVER_ID}\`.`, 0x59D267);
+	log(`T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`, 1);
 	process.send?.('ready');
 })();
 
