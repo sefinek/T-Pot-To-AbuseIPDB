@@ -4,7 +4,7 @@ const { CronJob } = require('cron');
 const { get } = require('./axios.js');
 const isLocalIP = require('../utils/isLocalIP.js');
 const log = require('../utils/log.js');
-const { IP_REFRESH_SCHEDULE, IPv6_SUPPORT } = require('../config.js').MAIN;
+const { IP_REFRESH_SCHEDULE, IPv6_SUPPORT } = require('../../config.js').MAIN;
 
 const ipAddresses = new Set();
 let ipv6ErrorCount = 0, ipv6ErrorLogged = false;

@@ -1,4 +1,4 @@
-const { version, homepage } = require('../package.json');
+const { version, homepage } = require('../../package.json');
 
 const match = homepage.match(/github\.com\/([^\\/]+)\/([^#\\/]+)/);
 const repoFull = match ? `${match[1]}/${match[2]}` : 'Missing/data';

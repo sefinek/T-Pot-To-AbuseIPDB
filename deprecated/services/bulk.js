@@ -6,7 +6,7 @@ const path = require('node:path');
 const axios = require('../services/axios.js');
 const { saveReportedIPs, markIPAsReported } = require('../services/cache.js');
 const log = require('../utils/log.js');
-const { ABUSEIPDB_API_KEY } = require('../config.js').MAIN;
+const { ABUSEIPDB_API_KEY } = require('../../config.js').MAIN;
 
 const BULK_REPORT_BUFFER = new Map();
 const BUFFER_FILE = path.join(__dirname, '..', 'tmp', 'bulk-report-buffer.csv');

@@ -1,6 +1,6 @@
 const { dirname } = require('node:path');
 const { mkdirSync, existsSync, readFileSync, writeFileSync } = require('node:fs');
-const { CACHE_FILE, IP_REPORT_COOLDOWN } = require('../config.js').MAIN;
+const { CACHE_FILE, IP_REPORT_COOLDOWN } = require('../../config.js').MAIN;
 const log = require('../utils/log.js');
 
 const reportedIPs = new Map();

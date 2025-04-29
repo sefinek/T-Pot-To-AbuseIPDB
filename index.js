@@ -102,21 +102,21 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	loadBufferFromFile();
 
 	if (BULK_REPORT_BUFFER.size > 0 && !ABUSE_STATE.isLimited) {
-		log(`📤 Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
+		log(`Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
 		await sendBulkReport();
 	}
 
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./scripts/services/summaries.js')();
 
-	log('🌐 Fetching public IP addresses from api.sefinek.net...');
+	log('Fetching public IP addresses from api.sefinek.net...');
 	await refreshServerIPs();
-	log(`✅ Retrieved ${getServerIPs()?.length} IP address(es) for this machine`, 1);
+	log(`Retrieved ${getServerIPs()?.length} IP address(es) for this machine`, 1);
 
 	require('./data/dionaea.js')(reportIp);
 	require('./data/honeytrap.js')(reportIp);
 	require('./data/cowrie.js')(reportIp);
 
-	if (SERVER_ID !== 'development') log(`T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`, 2);
+	if (SERVER_ID !== 'development') log(`T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`, 1);
 	process.send?.('ready');
 })();
 

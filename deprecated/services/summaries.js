@@ -1,7 +1,7 @@
 const { CronJob } = require('cron');
 const fs = require('node:fs/promises');
 const log = require('../utils/log.js');
-const { CACHE_FILE } = require('../config.js').MAIN;
+const { CACHE_FILE } = require('../../config.js').MAIN;
 
 const formatHourRange = hour => `${hour.toString().padStart(2, '0')}:00-${hour.toString().padStart(2, '0')}:59`;
 const pluralizeReport = count => (count === 1 ? 'report' : 'reports');

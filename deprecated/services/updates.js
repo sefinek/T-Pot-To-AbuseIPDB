@@ -1,5 +1,5 @@
 const { CronJob } = require('cron');
-const { AUTO_UPDATE_SCHEDULE } = require('../config.js').MAIN;
+const { AUTO_UPDATE_SCHEDULE } = require('../../config.js').MAIN;
 const log = require('../utils/log.js');
 
 const checkForUpdates = async () => {
