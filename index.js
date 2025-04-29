@@ -20,7 +20,7 @@ const nextRateLimitReset = () => {
 
 let LAST_RATELIMIT_LOG = 0, LAST_STATS_LOG = 0, RATELIMIT_RESET = nextRateLimitReset();
 
-const checkRateLimit = () => {
+const checkRateLimit = async () => {
 	const now = Date.now();
 	if (now - LAST_STATS_LOG >= BUFFER_STATS_INTERVAL && BULK_REPORT_BUFFER.size > 0) LAST_STATS_LOG = now;
 
@@ -28,7 +28,7 @@ const checkRateLimit = () => {
 		if (now >= RATELIMIT_RESET.getTime()) {
 			ABUSE_STATE.isLimited = false;
 			ABUSE_STATE.isBuffering = false;
-			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) sendBulkReport();
+			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) await sendBulkReport();
 			RATELIMIT_RESET = nextRateLimitReset();
 			ABUSE_STATE.sentBulk = false;
 
@@ -54,10 +54,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		return;
 	}
 
-	if (getServerIPs().includes(srcIp)) return;
 	if (isIPReportedRecently(srcIp)) return;
 
-	checkRateLimit();
+	await checkRateLimit();
 
 	if (ABUSE_STATE.isBuffering) {
 		if (BULK_REPORT_BUFFER.has(srcIp)) return;
