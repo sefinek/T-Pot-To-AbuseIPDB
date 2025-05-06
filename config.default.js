@@ -1,10 +1,10 @@
 exports.MAIN = {
 	// Server
+	COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
 	DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
 	HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json',
-	COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
 	CACHE_FILE: './tmp/tpot-abuseipdb-reporter.cache',
-	SERVER_ID: 'development',
+	SERVER_ID: null,
 	EXTENDED_LOGS: false,
 
 	// Network
