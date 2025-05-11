@@ -138,7 +138,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	if (DISCORD_WEBHOOKS_ENABLED && DISCORD_WEBHOOKS_URL) await require('./scripts/services/summaries.js')();
 
 	// Ready
-	await sendWebhook(`[${name}](${repoFullUrl}) has been successfully started on the device \`${SERVER_ID}\`.`, 0x59D267);
+	await sendWebhook(`[${name}](${repoFullUrl}) has been successfully started!`, 0x59D267);
 	log(`T-Pot AbuseIPDB Reporter has started${SERVER_ID ? ` on \`${SERVER_ID}\`` : '!'}`, 1);
 	process.send?.('ready');
 })();
