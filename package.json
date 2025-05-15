@@ -1,7 +1,6 @@
 {
   "name": "t-pot-to-abuseipdb",
-  "version": "0.1.0-beta.2",
-  "description": "",
+  "version": "0.2.0",
   "homepage": "https://github.com/sefinek/T-Pot-To-AbuseIPDB#readme",
   "bugs": {
     "url": "https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues"
@@ -15,7 +14,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "pull": "git pull && git pull --recurse-submodules && pm2 restart tpot-abuseipdb && pm2 logs tpot-abuseipdb",
+    "pull": "git pull --recurse-submodules && pm2 restart tpot-abuseipdb",
     "test": "echo \"Error: no test specified\" && exit 1",
     "up": "ncu -u && npm install && npm update && npm audit fix"
   },
@@ -28,6 +27,7 @@
     "csv-stringify": "^6.5.2",
     "form-data": "^4.0.2",
     "ipaddr.js": "^2.2.0",
+    "semver": "^7.7.2",
     "simple-git": "^3.27.0"
   },
   "devDependencies": {

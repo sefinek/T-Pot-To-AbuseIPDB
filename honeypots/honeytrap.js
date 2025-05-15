@@ -3,7 +3,7 @@ const path = require('node:path');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
 const ipSanitizer = require('../scripts/ipSanitizer.js');
-const log = require('../scripts/log.js');
+const logger = require('../scripts/logger.js');
 const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(HONEYTRAP_LOG_FILE);
@@ -118,13 +118,13 @@ const flushReport = async reportIp => {
 		await reportIp('HONEYTRAP', { srcIp, dpt: sortedPorts[0][0], proto, timestamp }, categories, comment);
 	}
 
-	log(`HONEYTRAP -> Flushed ${attackBuffer.size} IPs`, 1);
+	logger.log(`HONEYTRAP -> Flushed ${attackBuffer.size} IPs`, 1);
 	attackBuffer.clear();
 };
 
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
-		log(`HONEYTRAP -> Log file not found: ${LOG_FILE}`, 3, true);
+		logger.log(`HONEYTRAP -> Log file not found: ${LOG_FILE}`, 3, true);
 		return;
 	}
 
@@ -140,7 +140,7 @@ module.exports = reportIp => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			return log('HONEYTRAP -> Log truncated, offset reset', 2, true);
+			return logger.log('HONEYTRAP -> Log truncated, offset reset', 2, true);
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
@@ -149,8 +149,8 @@ module.exports = reportIp => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				log(`HONEYTRAP -> JSON parse error: ${err.message}`, 3, true);
-				log(`HONEYTRAP -> Faulty line: ${JSON.stringify(line)}`, 3, true);
+				logger.log(`HONEYTRAP -> JSON parse error: ${err.message}`, 3, true);
+				logger.log(`HONEYTRAP -> Faulty line: ${JSON.stringify(line)}`, 3, true);
 				return;
 			}
 
@@ -174,9 +174,9 @@ module.exports = reportIp => {
 					ipData.set(dpt, portData);
 				}
 
-				log(`HONEYTRAP -> ${srcIp} on ${dpt} | ${portData.count} attempt${portData.count === 1 ? '' : 's'}`);
+				logger.log(`HONEYTRAP -> ${srcIp} on ${dpt} | ${portData.count} attempt${portData.count === 1 ? '' : 's'}`);
 			} catch (err) {
-				log(err, 3);
+				logger.log(err, 3);
 			}
 		});
 
@@ -190,5 +190,5 @@ module.exports = reportIp => {
 		}
 	}, 60 * 1000);
 
-	log('🛡️ HONEYTRAP -> Watcher initialized', 1);
+	logger.log('🛡️ HONEYTRAP -> Watcher initialized', 1);
 };

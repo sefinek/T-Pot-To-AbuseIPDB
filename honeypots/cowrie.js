@@ -3,7 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
-const log = require('../scripts/log.js');
+const logger = require('../scripts/logger.js');
 const ipSanitizer = require('../scripts/ipSanitizer.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
@@ -51,7 +51,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 		}
 	}
 
-	if (!srcIp || !dpt || !proto) return log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
+	if (!srcIp || !dpt || !proto) return logger.log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
 
 	const creds = [...credsSet];
 	const loginAttempts = creds.length;
@@ -83,14 +83,14 @@ const flushBuffer = async (srcIp, reportIp) => {
 		timestamp,
 	}, [...categories].join(','), comment);
 
-	log(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment.split('\n').slice(1).join('\n')}`, 0, true);
+	logger.log(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment.split('\n').slice(1).join('\n')}`, 0, true);
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {
 	const ip = entry?.src_ip;
 	const sessionId = entry?.session;
 	const { eventid } = entry;
-	if (!ip || !eventid || !sessionId) return log('COWRIE -> Skipped: missing src_ip, eventid or sessionId', 2, true);
+	if (!ip || !eventid || !sessionId) return logger.log('COWRIE -> Skipped: missing src_ip, eventid or sessionId', 2, true);
 
 	let buffer = ipBuffers.get(ip);
 	if (!buffer) {
@@ -127,7 +127,7 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session) {
 			session.dpt = entry.dst_port;
 			session.proto = entry.protocol;
-			log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: Connect`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: Connect`);
 		}
 		break;
 
@@ -136,21 +136,21 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session && (entry.username || entry.password)) {
 			session.credentials.set(`${ipSanitizer(entry.username)}:${ipSanitizer(entry.password)}`, true);
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
-			log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: ${status} => ${entry.username}:${entry.password}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: ${status} => ${entry.username}:${entry.password}`);
 		}
 		break;
 
 	case 'cowrie.client.version':
 		if (session) {
 			session.sshVersion = entry.version;
-			log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: SSH version => ${entry.version}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: SSH version => ${entry.version}`);
 		}
 		break;
 
 	case 'cowrie.command.input':
 		if (session && entry.input) {
 			session.commands.push(entry.input);
-			log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: $ ${entry.input}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: $ ${entry.input}`);
 		}
 		break;
 
@@ -158,19 +158,19 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session && entry.url) {
 			session.commands.push(`[file download] ${entry.url}`);
 			session.download = { url: entry.url, outfile: entry.outfile };
-			log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: File download => ${entry.url}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: File download => ${entry.url}`);
 		}
 		break;
 
 	case 'cowrie.session.closed':
-		log(`COWRIE -> ${ip}/${session?.proto}/${session?.dpt}: Session ${sessionId} closed`);
+		logger.log(`COWRIE -> ${ip}/${session?.proto}/${session?.dpt}: Session ${sessionId} closed`);
 		break;
 	}
 };
 
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
-		log(`COWRIE -> Log file not found: ${LOG_FILE}`, 3, true);
+		logger.log(`COWRIE -> Log file not found: ${LOG_FILE}`, 3, true);
 		return;
 	}
 
@@ -186,7 +186,7 @@ module.exports = reportIp => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			return log('COWRIE -> Log truncated, offset reset', 2, true);
+			return logger.log('COWRIE -> Log truncated, offset reset', 2, true);
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
@@ -197,19 +197,19 @@ module.exports = reportIp => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				log(`COWRIE -> JSON parse error: ${err.message}`, 3, true);
-				log(`COWRIE -> Faulty line: ${JSON.stringify(line)}`, 3, true);
+				logger.log(`COWRIE -> JSON parse error: ${err.message}`, 3, true);
+				logger.log(`COWRIE -> Faulty line: ${JSON.stringify(line)}`, 3, true);
 				return;
 			}
 
 			try {
 				await processCowrieLogLine(entry, reportIp);
 			} catch (err) {
-				log(err, 3);
+				logger.log(err, 3);
 			}
 		});
 		rl.on('close', () => fileOffset = stats.size);
 	});
 
-	log('🛡️ COWRIE -> Watcher initialized', 1);
+	logger.log('🛡️ COWRIE -> Watcher initialized', 1);
 };
