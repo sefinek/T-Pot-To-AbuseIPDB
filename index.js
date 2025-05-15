@@ -1,12 +1,12 @@
 //   Copyright 2025 © by Sefinek. All Rights Reserved.
 //                https://sefinek.net
 
-const banner = require('./scripts/banners/ufw.js');
+const banner = require('./scripts/banners/t-pot.js');
 const { axios } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
-const { name, version, repoFullUrl } = require('./scripts/repo.js');
+const { name, repoFullUrl } = require('./scripts/repo.js');
 const sendWebhook = require('./scripts/services/discordWebhooks.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const logger = require('./scripts/logger.js');
@@ -103,7 +103,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 };
 
 (async () => {
-	banner(`T-Pot To AbuseIPDB (v${version})`);
+	banner();
 
 	// Auto updates
 	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') {
