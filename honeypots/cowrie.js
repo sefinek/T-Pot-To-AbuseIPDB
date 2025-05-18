@@ -1,6 +1,5 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const crypto = require('node:crypto');
 const chokidar = require('chokidar');
 const { createInterface } = require('node:readline');
 const logger = require('../scripts/logger.js');
@@ -19,7 +18,8 @@ const extractSessionData = sessions => {
 	const commands = [];
 	const categories = new Set(['15']);
 
-	let dpt = null, proto = null, sshVersion = null, suspiciousDownloadHash = null, timestamp = null;
+	let dpt = null, proto = null, sshVersion = null, timestamp = null;
+	let downloadUrl = null;
 
 	for (const s of sessions) {
 		dpt ??= s.dpt;
@@ -30,16 +30,10 @@ const extractSessionData = sessions => {
 		s.credentials?.forEach((_, cred) => credsSet.add(cred));
 		commands.push(...s.commands);
 
-		const url = s.download?.url?.toLowerCase();
-		if (url && (/\.(elf|sh|bin|py)$/).test(url)) {
+		const url = s.download?.url;
+		if (url) {
 			categories.add('21');
-			const filePath = s.download.outfile ? path.resolve(s.download.outfile) : null;
-			if (filePath && fs.existsSync(filePath)) {
-				try {
-					const fileBuf = fs.readFileSync(filePath);
-					suspiciousDownloadHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
-				} catch {}
-			}
+			downloadUrl = url;
 		}
 	}
 
@@ -53,10 +47,10 @@ const extractSessionData = sessions => {
 	if (cmdCount) categories.add('20');
 	if (!loginAttempts && !cmdCount) categories.add('14');
 
-	return { dpt, proto, sshVersion, timestamp, creds, commands, suspiciousDownloadHash, categories };
+	return { dpt, proto, sshVersion, timestamp, creds, commands, categories, downloadUrl };
 };
 
-const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, suspiciousDownloadHash }) => {
+const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrl }) => {
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
 	const lines = [];
@@ -74,7 +68,7 @@ const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, suspi
 	if (loginAttempts) lines.push(`• Number of login attempts: ${loginAttempts}`);
 	if (cmdCount) lines.push(`• ${cmdCount} command(s) were executed during the session`);
 	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
-	if (suspiciousDownloadHash) lines.push(`• SHA256 of suspicious file: ${suspiciousDownloadHash}`);
+	if (downloadUrl) lines.push(`• Suspicious file URL: ${downloadUrl}`);
 
 	return lines.join('\n');
 };
@@ -89,7 +83,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 	const sessions = buffer.sessions || [];
 	if (!sessions.length) return;
 
-	const { dpt, proto, sshVersion, timestamp, creds, commands, suspiciousDownloadHash, categories } = extractSessionData(sessions);
+	const { dpt, proto, sshVersion, timestamp, creds, commands, categories, downloadUrl } = extractSessionData(sessions);
 
 	if (!srcIp || !dpt || !proto) {
 		return logger.log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
@@ -102,7 +96,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 		creds,
 		commands,
 		sshVersion,
-		suspiciousDownloadHash,
+		downloadUrl,
 	});
 
 	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), comment);
@@ -120,12 +114,9 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		buffer = {
 			sessions: [],
 			timer: setTimeout(() => flushBuffer(ip, reportIp), REPORT_DELAY),
-			reportPendingLogged: false,
 		};
 		ipBuffers.set(ip, buffer);
 	}
-
-	if (!buffer.reportPendingLogged) buffer.reportPendingLogged = true;
 
 	let session = buffer.sessions.find(s => s.sessionId === sessionId);
 	if (!session && eventid !== 'cowrie.session.closed') {
@@ -179,14 +170,14 @@ const processCowrieLogLine = async (entry, reportIp) => {
 
 	case 'cowrie.session.file_download':
 		if (session && entry.url) {
-			session.commands.push(`[file download] ${entry.url}`);
+			session.commands.push(`[download] ${entry.url}`);
 			session.download = { url: entry.url, outfile: entry.outfile };
 			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: File download => ${entry.url}`);
 		}
 		break;
 
 	case 'cowrie.session.closed':
-		logger.log(`COWRIE -> ${ip}/${session?.proto}/${session?.dpt}: Session ${sessionId} closed`);
+		logger.log(`COWRIE -> ${ip}/${session?.proto ?? 'unknown'}/${session?.dpt ?? '-'}: Session ${sessionId} closed`);
 		break;
 	}
 };
