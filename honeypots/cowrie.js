@@ -11,7 +11,73 @@ const LOG_FILE = path.resolve(COWRIE_LOG_FILE);
 const REPORT_DELAY = SERVER_ID === 'development' ? 30 * 1000 : 10 * 60 * 1000;
 
 let fileOffset = 0;
+const CREDS_LIMIT = 900;
 const ipBuffers = new Map();
+
+const extractSessionData = sessions => {
+	const credsSet = new Set();
+	const commands = [];
+	const categories = new Set(['15']);
+
+	let dpt = null, proto = null, sshVersion = null, suspiciousDownloadHash = null, timestamp = null;
+
+	for (const s of sessions) {
+		dpt ??= s.dpt;
+		proto ??= s.proto;
+		sshVersion ??= s.sshVersion;
+		timestamp ??= s.timestamp;
+
+		s.credentials?.forEach((_, cred) => credsSet.add(cred));
+		commands.push(...s.commands);
+
+		const url = s.download?.url?.toLowerCase();
+		if (url && (/\.(elf|sh|bin|py)$/).test(url)) {
+			categories.add('21');
+			const filePath = s.download.outfile ? path.resolve(s.download.outfile) : null;
+			if (filePath && fs.existsSync(filePath)) {
+				try {
+					const fileBuf = fs.readFileSync(filePath);
+					suspiciousDownloadHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
+				} catch {}
+			}
+		}
+	}
+
+	const creds = [...credsSet];
+	const loginAttempts = creds.length;
+	const cmdCount = commands.length;
+
+	if (loginAttempts >= 2) categories.add('18');
+	if (proto === 'ssh') categories.add('22');
+	if (proto === 'telnet') categories.add('23');
+	if (cmdCount) categories.add('20');
+	if (!loginAttempts && !cmdCount) categories.add('14');
+
+	return { dpt, proto, sshVersion, timestamp, creds, commands, suspiciousDownloadHash, categories };
+};
+
+const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, suspiciousDownloadHash }) => {
+	const loginAttempts = creds.length;
+	const cmdCount = commands.length;
+	const lines = [];
+
+	lines.push(`Honeypot ${serverId ? `[${serverId}]` : 'hit'}: ${loginAttempts ? 'Brute-force attack' : 'Unauthorized connection attempt'} detected on ${dpt}/${proto.toUpperCase()}`);
+
+	if (loginAttempts === 1) {
+		lines.push(`• Credential used: ${creds[0]}`);
+	} else if (loginAttempts > 1) {
+		let joined = creds.join(', ');
+		if (joined.length > CREDS_LIMIT) joined = joined.slice(0, CREDS_LIMIT).replace(/,[^,]*$/, '') + '...';
+		lines.push(`• Credentials: ${joined}`);
+	}
+
+	if (loginAttempts) lines.push(`• Number of login attempts: ${loginAttempts}`);
+	if (cmdCount) lines.push(`• ${cmdCount} command(s) were executed during the session`);
+	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
+	if (suspiciousDownloadHash) lines.push(`• SHA256 of suspicious file: ${suspiciousDownloadHash}`);
+
+	return lines.join('\n');
+};
 
 const flushBuffer = async (srcIp, reportIp) => {
 	const buffer = ipBuffers.get(srcIp);
@@ -20,69 +86,26 @@ const flushBuffer = async (srcIp, reportIp) => {
 	clearTimeout(buffer.timer);
 	ipBuffers.delete(srcIp);
 
-	const allSessions = buffer.sessions;
-	if (allSessions.length === 0) return;
+	const sessions = buffer.sessions || [];
+	if (!sessions.length) return;
 
-	const categories = new Set(['15']);
-	const credsSet = new Set();
-	const commands = [];
-	let dpt = null, proto = null, sshVersion = null, suspiciousDownloadHash = null, timestamp = null;
+	const { dpt, proto, sshVersion, timestamp, creds, commands, suspiciousDownloadHash, categories } = extractSessionData(sessions);
 
-	for (const session of allSessions) {
-		dpt = dpt || session.dpt;
-		proto = proto || session.proto;
-		sshVersion = sshVersion || session.sshVersion;
-		timestamp = timestamp || session.timestamp;
-		session.credentials?.forEach((_, cred) => credsSet.add(cred));
-		commands.push(...session.commands);
-
-		if (session.download && session.download.url) {
-			const url = session.download.url.toLowerCase();
-			if (url.endsWith('.elf') || url.endsWith('.sh') || url.endsWith('.bin') || url.endsWith('.py')) {
-				categories.add('21');
-				try {
-					const filePath = path.resolve(session.download.outfile || '');
-					if (fs.existsSync(filePath)) {
-						const fileBuf = fs.readFileSync(filePath);
-						suspiciousDownloadHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
-					}
-				} catch {}
-			}
-		}
+	if (!srcIp || !dpt || !proto) {
+		return logger.log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
 	}
 
-	if (!srcIp || !dpt || !proto) return logger.log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
-
-	const creds = [...credsSet];
-	const loginAttempts = creds.length;
-	const cmdCount = commands.length;
-	if (loginAttempts >= 2) categories.add('18');
-	if (proto === 'ssh') categories.add('22');
-	if (proto === 'telnet') categories.add('23');
-	if (cmdCount > 0) categories.add('20');
-	if (loginAttempts === 0 && cmdCount === 0) categories.add('14');
-
-	const lines = [];
-	lines.push(`Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${creds.length >= 1 ? 'Brute-force attack' : 'Unauthorized connection attempt'} detected on ${dpt}/${proto.toUpperCase()}`);
-	if (creds.length === 1) {
-		lines.push(`• Credential used: ${creds[0]}`);
-	} else if (creds.length > 1) {
-		lines.push(`• Credentials used: ${creds.join(', ')}`);
-	}
-
-	if (loginAttempts >= 1) lines.push(`• Number of login attempts: ${loginAttempts}`);
-	if (cmdCount > 0) lines.push(`• ${cmdCount} command(s) were executed during the session`);
-	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
-	if (suspiciousDownloadHash) lines.push(`• SHA256 of suspicious file: ${suspiciousDownloadHash}`);
-
-	const comment = lines.join('\n');
-	await reportIp('COWRIE', {
-		srcIp,
+	const comment = buildComment({
+		serverId: SERVER_ID,
 		dpt,
 		proto,
-		timestamp,
-	}, [...categories].join(','), comment);
+		creds,
+		commands,
+		sshVersion,
+		suspiciousDownloadHash,
+	});
 
+	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), comment);
 	logger.log(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment.split('\n').slice(1).join('\n')}`, 0, true);
 };
 
@@ -197,8 +220,7 @@ module.exports = reportIp => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				logger.log(`COWRIE -> JSON parse error: ${err.message}`, 3, true);
-				logger.log(`COWRIE -> Faulty line: ${JSON.stringify(line)}`, 3, true);
+				logger.log(`COWRIE -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
 				return;
 			}
 

@@ -88,8 +88,7 @@ module.exports = reportIp => {
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				logger.log(`DIONAEA -> JSON parse error: ${err.message}`, 3, true);
-				logger.log(`DIONAEA -> Faulty line: ${JSON.stringify(line)}`, 3, true);
+				logger.log(`DIONAEA -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
 				return;
 			}
 
