@@ -1,3 +1,4 @@
+// Complete updated script with improvements
 const fs = require('node:fs');
 const path = require('node:path');
 const chokidar = require('chokidar');
@@ -18,12 +19,12 @@ const extractSessionData = sessions => {
 	const commands = [];
 	const categories = new Set(['15']);
 	const fingerprints = new Set();
-	const uploads = [];
-	const tunnels = [];
+	const uploads = new Set();
+	const tunnels = new Set();
 	const kexAlgs = new Set();
 
 	let dpt = null, proto = null, sshVersion = null, timestamp = null;
-	let downloadUrl = null;
+	const downloadUrls = new Set();
 
 	for (const s of sessions) {
 		dpt ??= s.dpt;
@@ -36,13 +37,11 @@ const extractSessionData = sessions => {
 
 		if (s.fingerprint) fingerprints.add(s.fingerprint);
 		if (s.kexAlgs) s.kexAlgs.forEach(alg => kexAlgs.add(alg));
-		if (s.uploads) uploads.push(...s.uploads);
-		if (s.tunnels) tunnels.push(...s.tunnels);
-
-		const url = s.download?.url;
-		if (url) {
+		if (s.uploads) s.uploads.forEach(f => uploads.add(f));
+		if (s.tunnels) s.tunnels.forEach(t => tunnels.add(t));
+		if (s.download?.url) {
 			categories.add('21');
-			downloadUrl = url;
+			downloadUrls.add(s.download.url);
 		}
 	}
 
@@ -58,12 +57,15 @@ const extractSessionData = sessions => {
 
 	return {
 		dpt, proto, sshVersion, timestamp, creds, commands,
-		categories, downloadUrl, fingerprints: [...fingerprints],
-		uploads, tunnels, kexAlgs: [...kexAlgs],
+		categories, downloadUrls: [...downloadUrls],
+		fingerprints: [...fingerprints],
+		uploads: [...uploads],
+		tunnels: [...tunnels],
+		kexAlgs: [...kexAlgs],
 	};
 };
 
-const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrl, fingerprints, uploads, tunnels, kexAlgs }) => {
+const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels, kexAlgs }) => {
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
 	const lines = [];
@@ -81,7 +83,7 @@ const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downl
 	if (loginAttempts) lines.push(`• Number of login attempts: ${loginAttempts}`);
 	if (cmdCount) lines.push(`• ${cmdCount} command(s) were executed during the session`);
 	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
-	if (downloadUrl) lines.push(`• Suspicious file URL: ${downloadUrl}`);
+	if (downloadUrls.length) lines.push(`• Suspicious file URLs: ${downloadUrls.join(', ')}`);
 	if (fingerprints.length) lines.push(`• SSH key fingerprints: ${fingerprints.join(', ')}`);
 	if (uploads.length) lines.push(`• Uploaded files: ${uploads.join(', ')}`);
 	if (tunnels.length) lines.push(`• TCP tunnels: ${tunnels.join(', ')}`);
@@ -102,7 +104,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 
 	const {
 		dpt, proto, sshVersion, timestamp, creds, commands,
-		categories, downloadUrl, fingerprints, uploads, tunnels, kexAlgs,
+		categories, downloadUrls, fingerprints, uploads, tunnels, kexAlgs,
 	} = extractSessionData(sessions);
 
 	if (!srcIp || !dpt || !proto) {
@@ -116,7 +118,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 		creds,
 		commands,
 		sshVersion,
-		downloadUrl,
+		downloadUrls,
 		fingerprints,
 		uploads,
 		tunnels,
@@ -138,8 +140,11 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		buffer = {
 			sessions: [],
 			timer: setTimeout(() => flushBuffer(ip, reportIp), REPORT_DELAY),
+			lastSeen: Date.now(),
 		};
 		ipBuffers.set(ip, buffer);
+	} else {
+		buffer.lastSeen = Date.now();
 	}
 
 	let session = buffer.sessions.find(s => s.sessionId === sessionId);
@@ -147,9 +152,9 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		session = {
 			sessionId,
 			srcIp: ip,
-			dpt: entry.dst_port,
-			proto: entry.protocol,
-			timestamp: entry.timestamp,
+			dpt: null,
+			proto: null,
+			timestamp: null,
 			credentials: new Map(),
 			commands: [],
 			sshVersion: null,
@@ -162,13 +167,12 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		buffer.sessions.push(session);
 	}
 
-	if (session) session.timestamp = entry.timestamp;
-
 	switch (eventid) {
 	case 'cowrie.session.connect':
 		if (session) {
 			session.dpt = entry.dst_port;
 			session.proto = entry.protocol;
+			session.timestamp = entry.timestamp;
 			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: Connect`);
 		}
 		break;
@@ -284,6 +288,18 @@ module.exports = reportIp => {
 			fileOffset = stats.size;
 		});
 	});
+
+	// Cleanup stale buffers
+	setInterval(() => {
+		const now = Date.now();
+		for (const [ip, buffer] of ipBuffers.entries()) {
+			if (now - buffer.lastSeen > 30 * 60 * 1000) {
+				clearTimeout(buffer.timer);
+				ipBuffers.delete(ip);
+				logger.log(`COWRIE -> Cleaned up stale session buffer for ${ip}`, 2, true);
+			}
+		}
+	}, 15 * 60 * 1000);
 
 	logger.log('🛡️ COWRIE -> Watcher initialized', 1);
 };
