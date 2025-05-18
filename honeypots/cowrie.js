@@ -301,5 +301,5 @@ module.exports = reportIp => {
 		}
 	}, 15 * 60 * 1000);
 
-	logger.log('🛡️ COWRIE -> Watcher initialized', 1);
+	logger.log('🛡️ COWRIE » Watcher initialized', 1);
 };

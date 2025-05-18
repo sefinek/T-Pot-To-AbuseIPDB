@@ -7,12 +7,12 @@ const logger = require('../scripts/logger.js');
 const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(HONEYTRAP_LOG_FILE);
+const HEADER_PRIORITY = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
+
 let fileOffset = 0;
 let lastFlushTime = Date.now();
-
 const attackBuffer = new Map();
 
-const HEADER_PRIORITY = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
 const capitalizeHeader = header => header.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-');
 
 const parseHttpRequest = (hex, dpt) => {
@@ -189,5 +189,5 @@ module.exports = reportIp => {
 		}
 	}, 60 * 1000);
 
-	logger.log('🛡️ HONEYTRAP -> Watcher initialized', 1);
+	logger.log('🛡️ HONEYTRAP » Watcher initialized', 1);
 };

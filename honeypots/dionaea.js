@@ -107,5 +107,5 @@ module.exports = reportIp => {
 		rl.on('close', () => fileOffset = stats.size);
 	});
 
-	logger.log('🛡️ DIONAEA -> Watcher initialized', 1);
+	logger.log('🛡️ DIONAEA » Watcher initialized', 1);
 };
