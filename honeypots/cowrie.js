@@ -1,4 +1,3 @@
-// Complete updated script with improvements
 const fs = require('node:fs');
 const path = require('node:path');
 const chokidar = require('chokidar');
@@ -21,7 +20,6 @@ const extractSessionData = sessions => {
 	const fingerprints = new Set();
 	const uploads = new Set();
 	const tunnels = new Set();
-	const kexAlgs = new Set();
 
 	let dpt = null, proto = null, sshVersion = null, timestamp = null;
 	const downloadUrls = new Set();
@@ -36,7 +34,6 @@ const extractSessionData = sessions => {
 		commands.push(...s.commands);
 
 		if (s.fingerprint) fingerprints.add(s.fingerprint);
-		if (s.kexAlgs) s.kexAlgs.forEach(alg => kexAlgs.add(alg));
 		if (s.uploads) s.uploads.forEach(f => uploads.add(f));
 		if (s.tunnels) s.tunnels.forEach(t => tunnels.add(t));
 		if (s.download?.url) {
@@ -61,11 +58,10 @@ const extractSessionData = sessions => {
 		fingerprints: [...fingerprints],
 		uploads: [...uploads],
 		tunnels: [...tunnels],
-		kexAlgs: [...kexAlgs],
 	};
 };
 
-const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels, kexAlgs }) => {
+const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }) => {
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
 	const lines = [];
@@ -87,7 +83,6 @@ const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downl
 	if (fingerprints.length) lines.push(`• SSH key fingerprints: ${fingerprints.join(', ')}`);
 	if (uploads.length) lines.push(`• Uploaded files: ${uploads.join(', ')}`);
 	if (tunnels.length) lines.push(`• TCP tunnels: ${tunnels.join(', ')}`);
-	if (kexAlgs.length) lines.push(`• Key exchange algorithms: ${kexAlgs.join(', ')}`);
 
 	return lines.join('\n');
 };
@@ -104,7 +99,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 
 	const {
 		dpt, proto, sshVersion, timestamp, creds, commands,
-		categories, downloadUrls, fingerprints, uploads, tunnels, kexAlgs,
+		categories, downloadUrls, fingerprints, uploads, tunnels,
 	} = extractSessionData(sessions);
 
 	if (!srcIp || !dpt || !proto) {
@@ -122,7 +117,6 @@ const flushBuffer = async (srcIp, reportIp) => {
 		fingerprints,
 		uploads,
 		tunnels,
-		kexAlgs,
 	});
 
 	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), comment);
@@ -162,7 +156,6 @@ const processCowrieLogLine = async (entry, reportIp) => {
 			fingerprint: null,
 			uploads: [],
 			tunnels: [],
-			kexAlgs: [],
 		};
 		buffer.sessions.push(session);
 	}
@@ -227,13 +220,6 @@ const processCowrieLogLine = async (entry, reportIp) => {
 			const tunnel = `${entry.dst_ip}:${entry.dst_port}`;
 			session.tunnels.push(tunnel);
 			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: TCP tunnel request » ${tunnel}`);
-		}
-		break;
-
-	case 'cowrie.client.kex':
-		if (session && entry.kexAlgs) {
-			session.kexAlgs = entry.kexAlgs;
-			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: Key exchange algorithms » ${entry.kexAlgs.join(', ')}`);
 		}
 		break;
 
