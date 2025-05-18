@@ -17,6 +17,10 @@ const extractSessionData = sessions => {
 	const credsSet = new Set();
 	const commands = [];
 	const categories = new Set(['15']);
+	const fingerprints = new Set();
+	const uploads = [];
+	const tunnels = [];
+	const kexAlgs = new Set();
 
 	let dpt = null, proto = null, sshVersion = null, timestamp = null;
 	let downloadUrl = null;
@@ -29,6 +33,11 @@ const extractSessionData = sessions => {
 
 		s.credentials?.forEach((_, cred) => credsSet.add(cred));
 		commands.push(...s.commands);
+
+		if (s.fingerprint) fingerprints.add(s.fingerprint);
+		if (s.kexAlgs) s.kexAlgs.forEach(alg => kexAlgs.add(alg));
+		if (s.uploads) uploads.push(...s.uploads);
+		if (s.tunnels) tunnels.push(...s.tunnels);
 
 		const url = s.download?.url;
 		if (url) {
@@ -47,10 +56,14 @@ const extractSessionData = sessions => {
 	if (cmdCount) categories.add('20');
 	if (!loginAttempts && !cmdCount) categories.add('14');
 
-	return { dpt, proto, sshVersion, timestamp, creds, commands, categories, downloadUrl };
+	return {
+		dpt, proto, sshVersion, timestamp, creds, commands,
+		categories, downloadUrl, fingerprints: [...fingerprints],
+		uploads, tunnels, kexAlgs: [...kexAlgs],
+	};
 };
 
-const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrl }) => {
+const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrl, fingerprints, uploads, tunnels, kexAlgs }) => {
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
 	const lines = [];
@@ -69,6 +82,10 @@ const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downl
 	if (cmdCount) lines.push(`• ${cmdCount} command(s) were executed during the session`);
 	if (sshVersion) lines.push(`• Client: ${sshVersion}`);
 	if (downloadUrl) lines.push(`• Suspicious file URL: ${downloadUrl}`);
+	if (fingerprints.length) lines.push(`• SSH key fingerprints: ${fingerprints.join(', ')}`);
+	if (uploads.length) lines.push(`• Uploaded files: ${uploads.join(', ')}`);
+	if (tunnels.length) lines.push(`• TCP tunnels: ${tunnels.join(', ')}`);
+	if (kexAlgs.length) lines.push(`• Key exchange algorithms: ${kexAlgs.join(', ')}`);
 
 	return lines.join('\n');
 };
@@ -83,7 +100,10 @@ const flushBuffer = async (srcIp, reportIp) => {
 	const sessions = buffer.sessions || [];
 	if (!sessions.length) return;
 
-	const { dpt, proto, sshVersion, timestamp, creds, commands, categories, downloadUrl } = extractSessionData(sessions);
+	const {
+		dpt, proto, sshVersion, timestamp, creds, commands,
+		categories, downloadUrl, fingerprints, uploads, tunnels, kexAlgs,
+	} = extractSessionData(sessions);
 
 	if (!srcIp || !dpt || !proto) {
 		return logger.log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
@@ -97,6 +117,10 @@ const flushBuffer = async (srcIp, reportIp) => {
 		commands,
 		sshVersion,
 		downloadUrl,
+		fingerprints,
+		uploads,
+		tunnels,
+		kexAlgs,
 	});
 
 	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), comment);
@@ -130,6 +154,10 @@ const processCowrieLogLine = async (entry, reportIp) => {
 			commands: [],
 			sshVersion: null,
 			download: null,
+			fingerprint: null,
+			uploads: [],
+			tunnels: [],
+			kexAlgs: [],
 		};
 		buffer.sessions.push(session);
 	}
@@ -150,14 +178,14 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session && (entry.username || entry.password)) {
 			session.credentials.set(`${ipSanitizer(entry.username)}:${ipSanitizer(entry.password)}`, true);
 			const status = eventid === 'cowrie.login.success' ? 'Connected' : 'Failed login';
-			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: ${status} => ${entry.username}:${entry.password}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: ${status} » ${entry.username}:${entry.password}`);
 		}
 		break;
 
 	case 'cowrie.client.version':
 		if (session) {
 			session.sshVersion = entry.version;
-			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: SSH version => ${entry.version}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: SSH version » ${entry.version}`);
 		}
 		break;
 
@@ -172,7 +200,36 @@ const processCowrieLogLine = async (entry, reportIp) => {
 		if (session && entry.url) {
 			session.commands.push(`[download] ${entry.url}`);
 			session.download = { url: entry.url, outfile: entry.outfile };
-			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: File download => ${entry.url}`);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: File download » ${entry.url}`);
+		}
+		break;
+
+	case 'cowrie.client.fingerprint':
+		if (session && entry.fingerprint) {
+			session.fingerprint = entry.fingerprint;
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: SSH key fingerprint » ${entry.fingerprint}`);
+		}
+		break;
+
+	case 'cowrie.session.file_upload':
+		if (session && entry.filename) {
+			session.uploads.push(entry.filename);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: File upload » ${entry.filename}`);
+		}
+		break;
+
+	case 'cowrie.direct-tcpip.request':
+		if (session && entry.dst_ip && entry.dst_port) {
+			const tunnel = `${entry.dst_ip}:${entry.dst_port}`;
+			session.tunnels.push(tunnel);
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: TCP tunnel request » ${tunnel}`);
+		}
+		break;
+
+	case 'cowrie.client.kex':
+		if (session && entry.kexAlgs) {
+			session.kexAlgs = entry.kexAlgs;
+			logger.log(`COWRIE -> ${ip}/${session.proto}/${session.dpt}: Key exchange algorithms » ${entry.kexAlgs.join(', ')}`);
 		}
 		break;
 
@@ -200,7 +257,8 @@ module.exports = reportIp => {
 		const stats = fs.statSync(file);
 		if (stats.size < fileOffset) {
 			fileOffset = 0;
-			return logger.log('COWRIE -> Log truncated, offset reset', 2, true);
+			logger.log('COWRIE -> Log truncated, offset reset', 2, true);
+			return;
 		}
 
 		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
@@ -221,7 +279,10 @@ module.exports = reportIp => {
 				logger.log(err, 3);
 			}
 		});
-		rl.on('close', () => fileOffset = stats.size);
+
+		rl.on('close', () => {
+			fileOffset = stats.size;
+		});
 	});
 
 	logger.log('🛡️ COWRIE -> Watcher initialized', 1);
