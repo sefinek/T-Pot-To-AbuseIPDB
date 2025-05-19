@@ -8,6 +8,7 @@ exports.MAIN = {
 	COWRIE_LOG_FILE: resolvePath('~/tpotce/data/cowrie/log/cowrie.json'),
 	DIONAEA_LOG_FILE: resolvePath('~/tpotce/data/dionaea/log/dionaea.json'),
 	HONEYTRAP_LOG_FILE: resolvePath('~/tpotce/data/honeytrap/log/attackers.json'),
+	IP_LOG_DIR: './logs', // Beta, please ignore
 	CACHE_FILE: './tmp/tpot-abuseipdb-reporter.cache',
 
 	/* --------------------------- Network --------------------------- */

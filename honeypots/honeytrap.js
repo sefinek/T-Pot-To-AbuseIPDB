@@ -3,6 +3,7 @@ const path = require('node:path');
 const TailFile = require('@logdna/tail-file');
 const split2 = require('split2');
 const ipSanitizer = require('../scripts/ipSanitizer.js');
+const logIpToFile = require('../scripts/logIpToFile.js');
 const logger = require('../scripts/logger.js');
 const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
@@ -115,6 +116,7 @@ const flushBuffer = async reportIp => {
 		const comment = `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${baseComment.replace(/ on \d+\/\w+/, '')}; ${portSummary} ${proto.toUpperCase()}`;
 
 		await reportIp('HONEYTRAP', { srcIp, dpt: sortedPorts[0][0], proto, timestamp }, categories, comment);
+		logIpToFile(srcIp, { honeypot: 'HONEYTRAP', proto, dpt: sortedPorts[0][0], category: categories, comment });
 	}
 
 	logger.log(`HONEYTRAP -> Flushed ${attackBuffer.size} IPs`, 1);
