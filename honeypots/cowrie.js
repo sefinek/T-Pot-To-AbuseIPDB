@@ -2,8 +2,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const TailFile = require('@logdna/tail-file');
 const split2 = require('split2');
-const logger = require('../scripts/logger.js');
 const ipSanitizer = require('../scripts/ipSanitizer.js');
+const logIpToFile = require('../scripts/logIpToFile.js');
+const logger = require('../scripts/logger.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(COWRIE_LOG_FILE);
@@ -60,7 +61,7 @@ const extractSessionData = sessions => {
 	};
 };
 
-const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }) => {
+const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }, full = false) => {
 	const loginAttempts = creds.length;
 	const cmdCount = commands.length;
 	const lines = [];
@@ -71,7 +72,7 @@ const buildComment = ({ serverId, dpt, proto, creds, commands, sshVersion, downl
 		lines.push(`• Credential used: ${creds[0]}`);
 	} else if (loginAttempts > 1) {
 		let joined = creds.join(', ');
-		if (joined.length > CREDS_LIMIT) joined = joined.slice(0, CREDS_LIMIT).replace(/,[^,]*$/, '') + '...';
+		if (!full && joined.length > CREDS_LIMIT) joined = joined.slice(0, CREDS_LIMIT).replace(/,[^,]*$/, '') + '...';
 		lines.push(`• Credentials: ${joined}`);
 	}
 
@@ -105,23 +106,14 @@ const flushBuffer = async (srcIp, reportIp) => {
 		return logger.log(`COWRIE -> Incomplete data for ${srcIp}, discarded`, 2, true);
 	}
 
-	const comment = buildComment({
-		serverId: SERVER_ID,
-		dpt,
-		proto,
-		creds,
-		commands,
-		sshVersion,
-		downloadUrls,
-		fingerprints,
-		uploads,
-		tunnels,
-	});
+	const shortComment = buildComment({ serverId: SERVER_ID, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }, false);
+	const [, ...restLines] = shortComment.split('\n');
+	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), shortComment);
 
-	const [, ...restLines] = comment.split('\n');
-	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), comment);
 	await logger.log(restLines.join('\n'));
 	await logger.webhook(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${restLines.join('\n')}`);
+
+	logIpToFile(srcIp, { honeypot: 'COWRIE', comment: buildComment({ serverId: SERVER_ID, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }, true) });
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {

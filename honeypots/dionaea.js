@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const TailFile = require('@logdna/tail-file');
 const split2 = require('split2');
+const logIpToFile = require('../scripts/logIpToFile.js');
 const logger = require('../scripts/logger.js');
 const { DIONAEA_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
@@ -57,7 +58,12 @@ const getReportDetails = (entry, dpt) => {
 		comment = `Unauthorized traffic on ${dpt}/${proto}`;
 	}
 
-	return { proto: proto.toUpperCase(), comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`, categories, timestamp };
+	return {
+		proto: proto.toUpperCase(),
+		comment: `Honeypot ${SERVER_ID ? `[${SERVER_ID}]` : 'hit'}: ${comment}`,
+		categories,
+		timestamp,
+	};
 };
 
 module.exports = reportIp => {
@@ -90,6 +96,8 @@ module.exports = reportIp => {
 
 				const { proto, timestamp, categories, comment } = getReportDetails(entry, dpt);
 				await reportIp('DIONAEA', { srcIp, dpt, proto, timestamp }, categories, comment);
+
+				logIpToFile(srcIp, { honeypot: 'DIONAEA', comment });
 			} catch (err) {
 				logger.log(err, 3);
 			}
