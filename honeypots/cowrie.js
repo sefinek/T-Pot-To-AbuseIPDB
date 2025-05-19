@@ -118,9 +118,10 @@ const flushBuffer = async (srcIp, reportIp) => {
 		tunnels,
 	});
 
+	const [, ...restLines] = comment.split('\n');
 	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), comment);
-	await logger.log(comment.join('\n'));
-	await logger.webhook(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${comment.join('\n')}`);
+	await logger.log(restLines.join('\n'));
+	await logger.webhook(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${restLines.join('\n')}`);
 };
 
 const processCowrieLogLine = async (entry, reportIp) => {
