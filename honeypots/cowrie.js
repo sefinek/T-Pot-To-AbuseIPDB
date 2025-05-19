@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const chokidar = require('chokidar');
-const { createInterface } = require('node:readline');
+const TailFile = require('@logdna/tail-file');
+const split2 = require('split2');
 const logger = require('../scripts/logger.js');
 const ipSanitizer = require('../scripts/ipSanitizer.js');
 const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
@@ -9,7 +9,6 @@ const { COWRIE_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 const LOG_FILE = path.resolve(COWRIE_LOG_FILE);
 const REPORT_DELAY = SERVER_ID === 'development' ? 30 * 1000 : 10 * 60 * 1000;
 
-let fileOffset = 0;
 const CREDS_LIMIT = 900;
 const ipBuffers = new Map();
 
@@ -231,36 +230,25 @@ const processCowrieLogLine = async (entry, reportIp) => {
 
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
-		logger.log(`COWRIE -> Log file not found: ${LOG_FILE}`, 3, true);
-		return;
+		return logger.log(`COWRIE -> Log file not found: ${LOG_FILE}`, 3, true);
 	}
 
-	fileOffset = fs.statSync(LOG_FILE).size;
+	const tail = new TailFile(LOG_FILE);
+	tail
+		.on('tail_error', err => logger.log(err, 3))
+		.start()
+		.catch(err => logger.log(err, 3));
 
-	chokidar.watch(LOG_FILE, {
-		persistent: true,
-		ignoreInitial: true,
-		awaitWriteFinish: { stabilityThreshold: 1000, pollInterval: 300 },
-		alwaysStat: true,
-		atomic: true,
-	}).on('change', file => {
-		const stats = fs.statSync(file);
-		if (stats.size < fileOffset) {
-			fileOffset = 0;
-			logger.log('COWRIE -> Log truncated, offset reset', 2, true);
-			return;
-		}
-
-		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
-		rl.on('line', async line => {
+	tail
+		.pipe(split2())
+		.on('data', async line => {
 			if (!line.length) return;
 
 			let entry;
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				logger.log(`COWRIE -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
-				return;
+				return logger.log(`COWRIE -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
 			}
 
 			try {
@@ -270,12 +258,7 @@ module.exports = reportIp => {
 			}
 		});
 
-		rl.on('close', () => {
-			fileOffset = stats.size;
-		});
-	});
-
-	// Cleanup stale buffers
+	// Clean buffer
 	setInterval(() => {
 		const now = Date.now();
 		for (const [ip, buffer] of ipBuffers.entries()) {
@@ -288,4 +271,5 @@ module.exports = reportIp => {
 	}, 15 * 60 * 1000);
 
 	logger.log('🛡️ COWRIE » Watcher initialized', 1);
+	return { tail, flush: () => flushBuffer(null, reportIp) };
 };

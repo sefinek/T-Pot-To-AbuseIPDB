@@ -1,12 +1,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const chokidar = require('chokidar');
-const { createInterface } = require('node:readline');
+const TailFile = require('@logdna/tail-file');
+const split2 = require('split2');
 const logger = require('../scripts/logger.js');
 const { DIONAEA_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 
 const LOG_FILE = path.resolve(DIONAEA_LOG_FILE);
-let fileOffset = 0;
 
 const getReportDetails = (entry, dpt) => {
 	const proto = entry?.connection?.protocol || 'unknown';
@@ -63,33 +62,25 @@ const getReportDetails = (entry, dpt) => {
 
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
-		logger.log(`DIONAEA -> Log file not found: ${LOG_FILE}`, 3, true);
-		return;
+		return logger.log(`DIONAEA -> Log file not found: ${LOG_FILE}`, 3, true);
 	}
 
-	fileOffset = fs.statSync(LOG_FILE).size;
+	const tail = new TailFile(LOG_FILE);
+	tail
+		.on('tail_error', err => logger.log(err, 3))
+		.start()
+		.catch(err => logger.log(err, 3));
 
-	chokidar.watch(LOG_FILE, {
-		persistent: true,
-		ignoreInitial: true,
-		awaitWriteFinish: { stabilityThreshold: 1000, pollInterval: 300 },
-		alwaysStat: true,
-		atomic: true,
-	}).on('change', file => {
-		const stats = fs.statSync(file);
-		if (stats.size < fileOffset) {
-			fileOffset = 0;
-			return logger.log('DIONAEA -> Log truncated, offset reset', 2, true);
-		}
+	tail
+		.pipe(split2())
+		.on('data', async line => {
+			if (!line.length) return;
 
-		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
-		rl.on('line', async line => {
 			let entry;
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				logger.log(`DIONAEA -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
-				return;
+				return logger.log(`DIONAEA -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
 			}
 
 			try {
@@ -104,8 +95,6 @@ module.exports = reportIp => {
 			}
 		});
 
-		rl.on('close', () => fileOffset = stats.size);
-	});
-
 	logger.log('🛡️ DIONAEA » Watcher initialized', 1);
+	return { tail, flush: async () => {} };
 };

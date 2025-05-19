@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const chokidar = require('chokidar');
-const { createInterface } = require('node:readline');
+const TailFile = require('@logdna/tail-file');
+const split2 = require('split2');
 const ipSanitizer = require('../scripts/ipSanitizer.js');
 const logger = require('../scripts/logger.js');
 const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
@@ -9,15 +9,13 @@ const { HONEYTRAP_LOG_FILE, SERVER_ID } = require('../config.js').MAIN;
 const LOG_FILE = path.resolve(HONEYTRAP_LOG_FILE);
 const HEADER_PRIORITY = ['user-agent', 'accept', 'accept-language', 'accept-encoding'];
 
-let fileOffset = 0;
 let lastFlushTime = Date.now();
 const attackBuffer = new Map();
 
 const capitalizeHeader = header => header.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-');
 
-const parseHttpRequest = (hex, dpt) => {
-	const raw = Buffer.from(hex, 'hex').toString('utf8');
-	const lines = raw.replace(/\r\n|\r/g, '\n').trim().split('\n');
+const parseHttpRequest = (ascii, dpt) => {
+	const lines = ascii.replace(/\r\n|\r/g, '\n').trim().split('\n');
 
 	const requestLineRaw = lines.shift()?.trim() || '';
 	const protocol = requestLineRaw.match(/HTTP\/[0-9.]+/i)?.[0]?.toUpperCase() || 'HTTP';
@@ -61,7 +59,8 @@ const parseHttpRequest = (hex, dpt) => {
 const getReportDetails = (entry, dpt) => {
 	const proto = entry?.attack_connection?.protocol || 'unknown';
 	const hex = entry?.attack_connection?.payload?.data_hex || '';
-	const ascii = Buffer.from(hex, 'hex').toString('utf8').replace(/\s+/g, ' ').toLowerCase();
+	const ascii = Buffer.from(hex, 'hex').toString('utf8');
+	const simplifiedAscii = ascii.replace(/\s+/g, ' ').toLowerCase();
 	const payloadLen = entry?.attack_connection?.payload?.length || 0;
 
 	let categories, comment;
@@ -74,19 +73,19 @@ const getReportDetails = (entry, dpt) => {
 		categories = '15';
 		comment = `Large payload (${payloadLen} bytes) on ${dpt}/${proto}`;
 		break;
-	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(ascii):
+	case (/HTTP\/(0\.9|1\.0|1\.1|2|3)/i).test(simplifiedAscii):
 		categories = '21';
-		comment = parseHttpRequest(hex, dpt);
+		comment = parseHttpRequest(ascii, dpt);
 		break;
-	case ascii.includes('ssh'):
+	case (/\bssh\b/).test(simplifiedAscii):
 		categories = '18,22';
 		comment = `SSH handshake/banner on ${dpt}/${proto} (${payloadLen} bytes of payload)`;
 		break;
-	case ascii.includes('cookie:'):
+	case simplifiedAscii.includes('cookie:'):
 		categories = '21,15';
 		comment = `HTTP header with cookie on ${dpt}/${proto}`;
 		break;
-	case (/(admin|root|wget|curl|bash|eval|php|bin)/).test(ascii):
+	case (/(admin|root|wget|curl|bash|eval|php|bin)/).test(simplifiedAscii):
 		categories = '15';
 		comment = `Suspicious payload on ${dpt}/${proto} (possible command injection)`;
 		break;
@@ -99,7 +98,7 @@ const getReportDetails = (entry, dpt) => {
 	return { proto, baseComment: comment, categories, timestamp: entry?.['@timestamp'] };
 };
 
-const flushReport = async reportIp => {
+const flushBuffer = async reportIp => {
 	if (!attackBuffer.size) return;
 
 	for (const [srcIp, ports] of attackBuffer.entries()) {
@@ -124,33 +123,25 @@ const flushReport = async reportIp => {
 
 module.exports = reportIp => {
 	if (!fs.existsSync(LOG_FILE)) {
-		logger.log(`HONEYTRAP -> Log file not found: ${LOG_FILE}`, 3, true);
-		return;
+		return logger.log(`HONEYTRAP -> Log file not found: ${LOG_FILE}`, 3, true);
 	}
 
-	fileOffset = fs.statSync(LOG_FILE).size;
+	const tail = new TailFile(LOG_FILE);
+	tail
+		.on('tail_error', err => logger.log(err, 3))
+		.start()
+		.catch(err => logger.log(err, 3));
 
-	chokidar.watch(LOG_FILE, {
-		persistent: true,
-		ignoreInitial: true,
-		awaitWriteFinish: { stabilityThreshold: 1000, pollInterval: 300 },
-		alwaysStat: true,
-		atomic: true,
-	}).on('change', file => {
-		const stats = fs.statSync(file);
-		if (stats.size < fileOffset) {
-			fileOffset = 0;
-			return logger.log('HONEYTRAP -> Log truncated, offset reset', 2, true);
-		}
+	tail
+		.pipe(split2())
+		.on('data', async line => {
+			if (!line.length) return;
 
-		const rl = createInterface({ input: fs.createReadStream(file, { start: fileOffset, encoding: 'utf8' }) });
-		rl.on('line', line => {
 			let entry;
 			try {
 				entry = JSON.parse(line);
 			} catch (err) {
-				logger.log(`HONEYTRAP -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
-				return;
+				return logger.log(`HONEYTRAP -> JSON parse error: ${err.message}\nFaulty line: ${JSON.stringify(line)}`, 3, true);
 			}
 
 			try {
@@ -158,13 +149,13 @@ module.exports = reportIp => {
 				const dpt = entry?.attack_connection?.local_port;
 				if (!srcIp || !dpt) return;
 
-				const { proto, timestamp, categories, baseComment } = getReportDetails(entry, dpt);
 				let ipData = attackBuffer.get(srcIp);
 				if (!ipData) {
 					ipData = new Map();
 					attackBuffer.set(srcIp, ipData);
 				}
 
+				const { proto, timestamp, categories, baseComment } = getReportDetails(entry, dpt);
 				let portData = ipData.get(dpt);
 				if (portData) {
 					portData.count++;
@@ -173,21 +164,20 @@ module.exports = reportIp => {
 					ipData.set(dpt, portData);
 				}
 
-				logger.log(`HONEYTRAP -> ${srcIp} on ${dpt} | ${portData.count} attempt${portData.count === 1 ? '' : 's'}`);
+				logger.log(`HONEYTRAP -> ${srcIp} hit ${dpt} | x${portData.count}`);
 			} catch (err) {
 				logger.log(err, 3);
 			}
 		});
 
-		rl.on('close', () => fileOffset = stats.size);
-	});
-
+	// Clean buffer
 	setInterval(async () => {
 		if (Date.now() >= lastFlushTime + 5 * 60 * 1000) {
-			await flushReport(reportIp);
+			await flushBuffer(reportIp);
 			lastFlushTime = Date.now();
 		}
 	}, 60 * 1000);
 
 	logger.log('🛡️ HONEYTRAP » Watcher initialized', 1);
+	return { tail, flush: () => flushBuffer(reportIp) };
 };

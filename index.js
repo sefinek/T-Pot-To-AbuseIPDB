@@ -126,9 +126,36 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	}
 
 	// Watch
-	require('./honeypots/dionaea.js')(reportIp);
-	require('./honeypots/honeytrap.js')(reportIp);
-	require('./honeypots/cowrie.js')(reportIp);
+	const watchers = [
+		require('./honeypots/dionaea.js')(reportIp),
+		require('./honeypots/honeytrap.js')(reportIp),
+		require('./honeypots/cowrie.js')(reportIp),
+	];
+
+	['SIGINT', 'SIGTERM'].forEach(signal => {
+		process.on(signal, async () => {
+			logger.log(`Caught ${signal}! Graceful shutdown started...`, 0, true);
+			try {
+				for (const watcher of watchers) {
+					if (typeof watcher?.flush === 'function') await watcher.flush();
+					if (typeof watcher?.tail?.quit === 'function') await watcher.tail.quit();
+				}
+				logger.log('All watchers closed. Exiting...', 1, true);
+			} catch (err) {
+				logger.log(`Error during shutdown: ${err.message}`, 3, true);
+			} finally {
+				process.exit(0);
+			}
+		});
+	});
+
+	process.on('uncaughtException', err => {
+		logger.log(`Uncaught exception: ${err.stack || err.message}`, 3, true);
+	});
+
+	process.on('unhandledRejection', reason => {
+		logger.log(`Unhandled rejection: ${reason}`, 3, true);
+	});
 
 	// Summaries
 	if (DISCORD_WEBHOOK_ENABLED && DISCORD_WEBHOOK_URL) await require('./scripts/services/summaries.js')();
