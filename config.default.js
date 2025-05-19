@@ -18,7 +18,7 @@ exports.MAIN = {
 
 	/* --------------------------- Reports --------------------------- */
 	ABUSEIPDB_API_KEY: '', // https://www.abuseipdb.com/account/api
-	IP_REPORT_COOLDOWN: 8 * 60 * 60 * 1000, // Minimum time between reports of the same IP. Must be >= 15 minutes. Do not set values like 1 hour, as it wouldn't make sense due to rate limits.
+	IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000, // Minimum time between reports of the same IP. Must be >= 15 minutes. Do not set values like 1 hour, as it wouldn't make sense due to rate limits.
 
 	/* --------------------------- Automatic Updates --------------------------- */
 	AUTO_UPDATE_ENABLED: false, // Automatic updates: true to enable auto-update via 'git pull', false to disable.
