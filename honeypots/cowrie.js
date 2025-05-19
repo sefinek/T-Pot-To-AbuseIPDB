@@ -110,7 +110,7 @@ const flushBuffer = async (srcIp, reportIp) => {
 	const [, ...restLines] = shortComment.split('\n');
 	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), shortComment);
 
-	await logger.log(restLines.join('\n'));
+	await logger.log(`\n${restLines.join('\n')}`);
 	await logger.webhook(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${restLines.join('\n')}`);
 
 	logIpToFile(srcIp, { honeypot: 'COWRIE', comment: buildComment({ serverId: SERVER_ID, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }, true) });
