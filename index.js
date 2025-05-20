@@ -47,6 +47,7 @@ const checkRateLimit = async () => {
 const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp }, categories, comment) => {
 	if (!srcIp) return logger.log(`${honeypot} -> Missing source IP (srcIp)`, 3, true);
 
+	// Check IP
 	const ips = getServerIPs();
 	if (!Array.isArray(ips)) return logger.log(`${honeypot} -> For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, 3, true);
 
@@ -56,16 +57,16 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		if (EXTENDED_LOGS) logger.log(`${honeypot} -> Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
 		return;
 	}
-	if (isIPReportedRecently(srcIp)) return;
 
+	// Report
+	if (isIPReportedRecently(srcIp)) return;
 	await checkRateLimit();
 
 	if (ABUSE_STATE.isBuffering) {
 		if (BULK_REPORT_BUFFER.has(srcIp)) return;
 		BULK_REPORT_BUFFER.set(srcIp, { categories, timestamp, comment });
 		await saveBufferToFile();
-		logger.log(`${honeypot} -> Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`, 1);
-		return;
+		return logger.log(`${honeypot} -> Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`, 1);
 	}
 
 	try {
