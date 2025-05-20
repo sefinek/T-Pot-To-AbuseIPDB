@@ -50,8 +50,8 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	const ips = getServerIPs();
 	if (!Array.isArray(ips)) return logger.log(`${honeypot} -> For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, 3, true);
 
-	if (ips.includes(srcIp)) return logger.log(`${honeypot} -> Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 0, true);
-	if (isSpecialPurposeIP(srcIp)) return logger.log(`${honeypot} -> Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 0, true);
+	if (ips.includes(srcIp)) return logger.log(`${honeypot} -> Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 0, EXTENDED_LOGS);
+	if (isSpecialPurposeIP(srcIp)) return logger.log(`${honeypot} -> Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 0, EXTENDED_LOGS);
 	if (proto === 'UDP') {
 		if (EXTENDED_LOGS) logger.log(`${honeypot} -> Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
 		return;
