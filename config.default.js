@@ -8,8 +8,8 @@ exports.MAIN = {
 	COWRIE_LOG_FILE: resolvePath('~/tpotce/data/cowrie/log/cowrie.json'),
 	DIONAEA_LOG_FILE: resolvePath('~/tpotce/data/dionaea/log/dionaea.json'),
 	HONEYTRAP_LOG_FILE: resolvePath('~/tpotce/data/honeytrap/log/attackers.json'),
-	LOG_IP_HISTORY_ENABLED: true, // Beta, please ignore
-	LOG_IP_HISTORY_DIR: './logs', // Beta, please ignore
+	LOG_IP_HISTORY_ENABLED: false, // Saves the collected data in .txt files inside separate subfolders named after IP addresses.
+	LOG_IP_HISTORY_DIR: './data', // Where should the collected data be saved? This folder will store subfolders named after IP addresses.
 	CACHE_FILE: './tmp/tpot-abuseipdb-reporter.cache',
 
 	/* --------------------------- Network --------------------------- */

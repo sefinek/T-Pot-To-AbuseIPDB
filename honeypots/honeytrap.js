@@ -124,9 +124,7 @@ const flushBuffer = async reportIp => {
 };
 
 module.exports = reportIp => {
-	if (!fs.existsSync(LOG_FILE)) {
-		return logger.log(`HONEYTRAP -> Log file not found: ${LOG_FILE}`, 3, true);
-	}
+	if (!fs.existsSync(LOG_FILE)) return logger.log(`HONEYTRAP -> Log file not found: ${LOG_FILE}`, 3, true);
 
 	const tail = new TailFile(LOG_FILE);
 	tail

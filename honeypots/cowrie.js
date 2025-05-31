@@ -108,10 +108,11 @@ const flushBuffer = async (srcIp, reportIp) => {
 
 	const shortComment = buildComment({ serverId: SERVER_ID, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }, false);
 	const [, ...restLines] = shortComment.split('\n');
-	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), shortComment);
+	const rest = restLines.length ? `\n${restLines.join('\n')}` : '';
 
-	await logger.log(`\n${restLines.join('\n')}`);
-	await logger.webhook(`### Cowrie: ${srcIp} on ${dpt}/${proto}\n${restLines.join('\n')}`);
+	await reportIp('COWRIE', { srcIp, dpt, proto, timestamp }, [...categories].join(','), shortComment);
+	if (restLines.length) await logger.log(rest);
+	await logger.webhook(`### Cowrie: ${srcIp} on ${dpt}/${proto}${rest}`);
 
 	logIpToFile(srcIp, { honeypot: 'COWRIE', comment: buildComment({ serverId: SERVER_ID, dpt, proto, creds, commands, sshVersion, downloadUrls, fingerprints, uploads, tunnels }, true) });
 };
@@ -223,9 +224,7 @@ const processCowrieLogLine = async (entry, reportIp) => {
 };
 
 module.exports = reportIp => {
-	if (!fs.existsSync(LOG_FILE)) {
-		return logger.log(`COWRIE -> Log file not found: ${LOG_FILE}`, 3, true);
-	}
+	if (!fs.existsSync(LOG_FILE)) return logger.log(`COWRIE -> Log file not found: ${LOG_FILE}`, 3, true);
 
 	const tail = new TailFile(LOG_FILE);
 	tail
