@@ -6,8 +6,7 @@ const { axios } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
-const { name, repoFullUrl } = require('./scripts/repo.js');
-const sendWebhook = require('./scripts/services/discordWebhooks.js');
+const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const logger = require('./scripts/logger.js');
 const config = require('./config.js');
@@ -162,7 +161,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	if (DISCORD_WEBHOOK_ENABLED && DISCORD_WEBHOOK_URL) await require('./scripts/services/summaries.js')();
 
 	// Ready
-	await sendWebhook(`[${name}](${repoFullUrl}) was successfully started!`, 0x59D267);
+	await logger.webhook(`[${repoSlug}](${repoUrl}) was successfully started!`, 0x59D267);
 	process.send?.('ready');
 })();
 
