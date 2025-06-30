@@ -127,9 +127,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	// Watch
 	const watchers = [
-		require('./honeypots/dionaea.js')(reportIp),
-		require('./honeypots/honeytrap.js')(reportIp),
-		require('./honeypots/cowrie.js')(reportIp),
+		require('./scripts/honeypots/dionaea.js')(reportIp),
+		require('./scripts/honeypots/honeytrap.js')(reportIp),
+		require('./scripts/honeypots/cowrie.js')(reportIp),
 	];
 
 	['SIGINT', 'SIGTERM'].forEach(signal => {
