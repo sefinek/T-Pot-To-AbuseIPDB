@@ -2,7 +2,7 @@
 //                https://sefinek.net
 
 const banner = require('./scripts/banners/t-pot.js');
-const { axios } = require('./scripts/services/axios.js');
+const { axiosService } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
@@ -69,7 +69,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	}
 
 	try {
-		const { data: res } = await axios.post('/report', new URLSearchParams({
+		const { data: res } = await axiosService.post('/report', new URLSearchParams({
 			ip: srcIp,
 			categories,
 			comment,
