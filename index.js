@@ -69,11 +69,11 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	}
 
 	try {
-		const { data: res } = await axiosService.post('/report', new URLSearchParams({
+		const { data: res } = await axiosService.post('/report', {
 			ip: srcIp,
 			categories,
 			comment,
-		}), { headers: { 'Key': ABUSEIPDB_API_KEY } });
+		});
 
 		markIPAsReported(srcIp);
 		await saveReportedIPs();
