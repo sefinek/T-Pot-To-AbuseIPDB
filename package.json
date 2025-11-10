@@ -21,19 +21,19 @@
   },
   "dependencies": {
     "@logdna/tail-file": "^4.0.2",
-    "axios": "^1.12.2",
+    "axios": "^1.13.2",
     "axios-retry": "^4.5.0",
-    "cron": "^4.3.3",
+    "cron": "^4.3.4",
     "csv-parse": "^6.1.0",
     "csv-stringify": "^6.6.0",
     "form-data": "^4.0.4",
     "ipaddr.js": "^2.2.0",
-    "semver": "^7.7.2",
-    "simple-git": "^3.28.0",
+    "semver": "^7.7.3",
+    "simple-git": "^3.30.0",
     "split2": "^4.2.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "globals": "^16.4.0"
+    "@eslint/js": "^9.39.1",
+    "globals": "^16.5.0"
   }
 }
