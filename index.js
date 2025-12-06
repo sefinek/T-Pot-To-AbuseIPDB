@@ -208,14 +208,14 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	['SIGINT', 'SIGTERM'].forEach(signal => {
 		process.on(signal, async () => {
-			logger.log(`Caught ${signal}! Graceful shutdown started...`, 0, true);
+			logger.log(`Caught ${signal}! Graceful shutdown started...`, 1, true);
+
 			try {
 				for (const watcher of watchers) {
 					if (typeof watcher?.flush === 'function') await watcher.flush();
 					if (typeof watcher?.cleanup === 'function') watcher.cleanup();
 					if (typeof watcher?.tail?.quit === 'function') await watcher.tail.quit();
 				}
-				logger.log('All watchers closed. Exiting...', 1, true);
 			} catch (err) {
 				logger.log(`Error during shutdown: ${err.message}`, 3, true);
 			} finally {
