@@ -1,6 +1,6 @@
 {
   "name": "t-pot-to-abuseipdb",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "homepage": "https://github.com/sefinek/T-Pot-To-AbuseIPDB#readme",
   "bugs": {
     "url": "https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues"
@@ -23,11 +23,11 @@
     "@logdna/tail-file": "^4.0.2",
     "axios": "^1.13.2",
     "axios-retry": "^4.5.0",
-    "cron": "^4.3.4",
+    "cron": "^4.3.5",
     "csv-parse": "^6.1.0",
     "csv-stringify": "^6.6.0",
-    "form-data": "^4.0.4",
-    "ipaddr.js": "^2.2.0",
+    "form-data": "^4.0.5",
+    "ipaddr.js": "^2.3.0",
     "semver": "^7.7.3",
     "simple-git": "^3.30.0",
     "split2": "^4.2.0"

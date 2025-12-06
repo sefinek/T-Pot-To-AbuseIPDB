@@ -1,13 +1,10 @@
-const os = require('node:os');
-const resolvePath = p => p.replace(/^~(?=$|\/|\\)/, os.homedir());
-
 exports.MAIN = {
 	/* --------------------------- Server --------------------------- */
 	SERVER_ID: null, // Server identifier (e.g., 'hp-terminal', 'pl-cluster', 'de1'). Use 'development' for testing only. 'production' has no effect. Use null to leave it unset.
 	EXTENDED_LOGS: false, // Specifies whether the script should display additional information in the logs.
-	COWRIE_LOG_FILE: resolvePath('~/tpotce/data/cowrie/log/cowrie.json'),
-	DIONAEA_LOG_FILE: resolvePath('~/tpotce/data/dionaea/log/dionaea.json'),
-	HONEYTRAP_LOG_FILE: resolvePath('~/tpotce/data/honeytrap/log/attackers.json'),
+	COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
+	DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
+	HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json',
 	LOG_IP_HISTORY_ENABLED: false, // Saves the collected data in .txt files inside separate subfolders named after IP addresses.
 	LOG_IP_HISTORY_DIR: './data', // Where should the collected data be saved? This folder will store subfolders named after IP addresses.
 	CACHE_FILE: './tmp/tpot-abuseipdb-reporter.cache',

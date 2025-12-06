@@ -9,8 +9,9 @@ const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher
 const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const logger = require('./scripts/logger.js');
+const resolvePath = require('./scripts/pathResolver.js');
 const config = require('./config.js');
-const { ABUSEIPDB_API_KEY, SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL } = config.MAIN;
+const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
 
 const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
@@ -104,6 +105,33 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 (async () => {
 	banner();
+
+	// Log resolved paths in development mode
+	if (SERVER_ID === 'development' && EXTENDED_LOGS) {
+		const fs = require('node:fs');
+		const validatePath = p => {
+			try {
+				return fs.existsSync(p) ? '✓' : '✗';
+			} catch {
+				return '?';
+			}
+		};
+
+		const paths = {
+			COWRIE_LOG_FILE: resolvePath(COWRIE_LOG_FILE),
+			DIONAEA_LOG_FILE: resolvePath(DIONAEA_LOG_FILE),
+			HONEYTRAP_LOG_FILE: resolvePath(HONEYTRAP_LOG_FILE),
+			CACHE_FILE: resolvePath(CACHE_FILE),
+			LOG_IP_HISTORY_DIR: resolvePath(LOG_IP_HISTORY_DIR),
+		};
+
+		logger.log('Development mode: Resolved file paths');
+		logger.log(`  ${validatePath(paths.COWRIE_LOG_FILE)} COWRIE_LOG_FILE:    ${paths.COWRIE_LOG_FILE}`);
+		logger.log(`  ${validatePath(paths.DIONAEA_LOG_FILE)} DIONAEA_LOG_FILE:   ${paths.DIONAEA_LOG_FILE}`);
+		logger.log(`  ${validatePath(paths.HONEYTRAP_LOG_FILE)} HONEYTRAP_LOG_FILE: ${paths.HONEYTRAP_LOG_FILE}`);
+		logger.log(`  ${validatePath(paths.CACHE_FILE)} CACHE_FILE:         ${paths.CACHE_FILE}`);
+		logger.log(`  ${validatePath(paths.LOG_IP_HISTORY_DIR)} LOG_IP_HISTORY_DIR: ${paths.LOG_IP_HISTORY_DIR}`);
+	}
 
 	// Auto updates
 	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') {
