@@ -1,5 +1,5 @@
-//   Copyright 2025 © by Sefinek. All Rights Reserved.
-//                https://sefinek.net
+//     Copyright © 2024–2025 Sefinek <contact@sefinek.net>
+//                  https://sefinek.net
 
 const banner = require('./scripts/banners/t-pot.js');
 const { axiosService } = require('./scripts/services/axios.js');
@@ -13,9 +13,11 @@ const resolvePath = require('./scripts/pathResolver.js');
 const config = require('./config.js');
 const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
 
-const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false };
+const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false, bulkRetryCount: 0 };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
 const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
+const MAX_BULK_RETRY_ATTEMPTS = 3;
+const MAX_BUFFER_SIZE = 100000;
 
 const nextRateLimitReset = () => {
 	const now = new Date();
@@ -32,9 +34,21 @@ const checkRateLimit = async () => {
 		if (now >= RATELIMIT_RESET.getTime()) {
 			ABUSE_STATE.isLimited = false;
 			ABUSE_STATE.isBuffering = false;
-			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) await sendBulkReport();
+
+			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) {
+				if (ABUSE_STATE.bulkRetryCount < MAX_BULK_RETRY_ATTEMPTS) {
+					ABUSE_STATE.bulkRetryCount++;
+					logger.log(`Attempting bulk report (attempt ${ABUSE_STATE.bulkRetryCount}/${MAX_BULK_RETRY_ATTEMPTS})...`, 1);
+					await sendBulkReport();
+				} else {
+					logger.log(`Maximum bulk retry attempts (${MAX_BULK_RETRY_ATTEMPTS}) reached. Clearing buffer to prevent infinite loop.`, 2, true);
+					BULK_REPORT_BUFFER.clear();
+				}
+			}
+
 			RATELIMIT_RESET = nextRateLimitReset();
 			ABUSE_STATE.sentBulk = false;
+			ABUSE_STATE.bulkRetryCount = 0;
 			logger.log(`Rate limit reset. Next reset scheduled at ${RATELIMIT_RESET.toISOString()}`, 1);
 		} else if (now - LAST_RATELIMIT_LOG >= RATE_LIMIT_LOG_INTERVAL) {
 			const minutesLeft = Math.ceil((RATELIMIT_RESET.getTime() - now) / 60000);
@@ -64,6 +78,13 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	if (ABUSE_STATE.isBuffering) {
 		if (BULK_REPORT_BUFFER.has(srcIp)) return;
+
+		// Check buffer size limit to prevent memory overflow
+		if (BULK_REPORT_BUFFER.size >= MAX_BUFFER_SIZE) {
+			logger.log(`${honeypot} -> Buffer full (${MAX_BUFFER_SIZE} IPs). Skipping ${srcIp} to prevent memory overflow.`, 2);
+			return;
+		}
+
 		BULK_REPORT_BUFFER.set(srcIp, { categories, timestamp, comment });
 		await saveBufferToFile();
 		return logger.log(`${honeypot} -> Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`, 1);
@@ -81,7 +102,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 		logger.log(`${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Abuse: ${res.data.abuseConfidenceScore}%`, 1);
 	} catch (err) {
-		const status = err.response?.status ?? 'unknown';
+		const status = err.response?.status ?? 'NO_RESPONSE';
+		const errorCode = err.code ?? 'UNKNOWN_ERROR';
+
 		if (status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
 			if (!ABUSE_STATE.isLimited) {
 				ABUSE_STATE.isLimited = true;
@@ -93,18 +116,41 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 			}
 
 			if (!BULK_REPORT_BUFFER.has(srcIp)) {
-				BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
-				await saveBufferToFile();
-				logger.log(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`, 1);
+				if (BULK_REPORT_BUFFER.size < MAX_BUFFER_SIZE) {
+					BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
+					await saveBufferToFile();
+					logger.log(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`, 1);
+				} else {
+					logger.log(`${honeypot} -> Buffer full (${MAX_BUFFER_SIZE} IPs). Cannot queue ${srcIp}`, 2);
+				}
 			}
 		} else {
-			logger.log(`${honeypot} -> Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`, status === 429 ? 0 : 3);
+			const errorMsg = err.response?.data?.errors
+				? JSON.stringify(err.response.data.errors)
+				: err.message;
+			logger.log(`${honeypot} -> Failed to report ${srcIp} [${dpt}/${proto}] [${status}/${errorCode}]: ${errorMsg}`, status === 429 ? 0 : 3);
 		}
 	}
 };
 
 (async () => {
 	banner();
+
+	// Validate critical configuration
+	if (!config.MAIN.ABUSEIPDB_API_KEY) {
+		logger.log('FATAL: ABUSEIPDB_API_KEY is required. Set it in config.js or as environment variable.', 3, true);
+		process.exit(1);
+	}
+
+	if (config.MAIN.IP_REPORT_COOLDOWN < 15 * 60 * 1000) {
+		logger.log('FATAL: IP_REPORT_COOLDOWN must be at least 15 minutes (900000 ms)', 3, true);
+		process.exit(1);
+	}
+
+	if (config.MAIN.DISCORD_WEBHOOK_ENABLED && !config.MAIN.DISCORD_WEBHOOK_URL) {
+		logger.log('WARNING: DISCORD_WEBHOOK_ENABLED is true but DISCORD_WEBHOOK_URL is not set. Disabling webhooks.', 2, true);
+		config.MAIN.DISCORD_WEBHOOK_ENABLED = false;
+	}
 
 	// Log resolved paths in development mode
 	if (SERVER_ID === 'development' && EXTENDED_LOGS) {
@@ -166,6 +212,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 			try {
 				for (const watcher of watchers) {
 					if (typeof watcher?.flush === 'function') await watcher.flush();
+					if (typeof watcher?.cleanup === 'function') watcher.cleanup();
 					if (typeof watcher?.tail?.quit === 'function') await watcher.tail.quit();
 				}
 				logger.log('All watchers closed. Exiting...', 1, true);
