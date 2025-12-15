@@ -1,4 +1,6 @@
 # T-Pot to AbuseIPDB (beta, not finished yet)
+Do you have any questions or want to receive notifications about important changes or new features in my repositories?
+Join my [Discord server](https://discord.gg/S7NDzCzQTg)! If you don't use Discord, you can also open an issue on GitHub.
 
 ## Supports
 - ✅ COWIRE
