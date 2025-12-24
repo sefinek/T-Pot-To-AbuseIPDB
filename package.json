@@ -15,9 +15,9 @@
   "main": "index.js",
   "scripts": {
     "m": "ncu -u && npm install && npm update",
-    "pull": "git pull --recurse-submodules && pm2 restart tpot-abuseipdb",
+    "pull": "git pull origin main && git submodule update --init",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "update": "git pull --recurse-submodules && npm install --omit=dev && pm2 restart tpot-abuseipdb"
+    "update": "npm run pull && npm ci --omit=dev && pm2 restart tpot-abuseipdb"
   },
   "dependencies": {
     "@logdna/tail-file": "^4.0.2",
