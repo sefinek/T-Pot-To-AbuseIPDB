@@ -32,7 +32,7 @@ cp config.default.js config.js
 node .
 ```
 
-6. For automatic startup use `pm2`. Check PM2 documentation for more information.
+6. If you want to run this script 24/7, use `pm2`. Check PM2 documentation for more information.
 ```bash
 npm install pm2 -g
 pm2 start
