@@ -7,47 +7,47 @@ Join my [Discord server](https://discord.gg/S7NDzCzQTg)! If you don't use Discor
 - ✅ DIONAEA
 - ✅ HONEYTRAP
 
-## Clone
+
+## How to use
+1. Install Node.js and npm, see: https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649.
+   You may also want to update Git to the latest version: https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada
+
+2. Clone this repository:
 ```bash
 git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
 
-## Install
-
-1. Install NPM, Debian example:
-
+3. Install dependencies
 ```bash
-apt update
-apt install npm
+cd T-Pot-To-AbuseIPDB && npm install
 ```
 
-2. Install dependencies
-
+4. Copy `config.default.js` to `config.js` and update it to fit your needs. Add AbuseIPDB API KEY!
 ```bash
-npm install
+cp config.default.js config.js
 ```
 
-3. Copy config.default.js to config.js and update it to fit your needs. Add AbuseIPDB API KEY!
-
-4.Manual startup
-
+5. Manual startup
 ```bash
-nodejs index.js
+node .
 ```
 
-5. For automatic startup use pm2. Check PM2 documentation for more information. 
-
+6. For automatic startup use `pm2`. Check PM2 documentation for more information.
 ```bash
-sudo npm install pm2 -g
-pm2 start ecosystem.config.js
+npm install pm2 -g
+pm2 start
 ```
 
-6. For log monitoring
+7. Add PM2 to startup:
+```bash
+pm2 startup
+pm2 save
+```
 
+8. For log monitoring:
 ```bash
 pm2 logs
 ```
-
 
 
 ## Example reports
