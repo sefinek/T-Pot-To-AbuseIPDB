@@ -7,10 +7,48 @@ Join my [Discord server](https://discord.gg/S7NDzCzQTg)! If you don't use Discor
 - ✅ DIONAEA
 - ✅ HONEYTRAP
 
-## Clone
+
+## How to use
+1. Install Node.js and npm, see: https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649.
+   You may also want to update Git to the latest version: https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada
+
+2. Clone this repository:
 ```bash
 git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
+
+3. Install dependencies
+```bash
+cd T-Pot-To-AbuseIPDB && npm install
+```
+
+4. Copy `config.default.js` to `config.js` and update it to fit your needs. Add AbuseIPDB API KEY!
+```bash
+cp config.default.js config.js
+```
+
+5. Manual startup
+```bash
+node .
+```
+
+6. If you want to run this script 24/7, use `pm2`. Check PM2 documentation for more information.
+```bash
+npm install pm2 -g
+pm2 start
+```
+
+7. Add PM2 to startup:
+```bash
+pm2 startup
+pm2 save
+```
+
+8. For log monitoring:
+```bash
+pm2 logs
+```
+
 
 ## Example reports
 ```text
