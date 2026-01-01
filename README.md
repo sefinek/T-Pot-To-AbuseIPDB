@@ -12,6 +12,44 @@ Join my [Discord server](https://discord.gg/S7NDzCzQTg)! If you don't use Discor
 git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
 
+## Install
+
+1. Install NPM, Debian example:
+
+```bash
+apt update
+apt install npm
+```
+
+2. Install dependencies
+
+```bash
+npm install
+```
+
+3. Copy config.default.js to config.js and update it to fit your needs. Add AbuseIPDB API KEY!
+
+4.Manual startup
+
+```bash
+nodejs index.js
+```
+
+5. For automatic startup use pm2. Check PM2 documentation for more information. 
+
+```bash
+sudo npm install pm2 -g
+pm2 start ecosystem.config.js
+```
+
+6. For log monitoring
+
+```bash
+pm2 logs
+```
+
+
+
 ## Example reports
 ```text
 Honeypot hit: Brute-force attack detected on 22/SSH
