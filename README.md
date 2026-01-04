@@ -27,7 +27,7 @@ The script monitors logs, analyzes attack attempts, and reports them automatical
 > The script automatically skips UDP traffic (in accordance with AbuseIPDB rules) and special-purpose IP addresses (localhost, private, link-local, multicast).
 
 > [!NOTE]
-> The repository is actively developed. Feel free to report issues and submit Pull Requests.
+> The repository is actively developed. Feel free to report [Issues](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues) and submit [Pull requests](https://github.com/sefinek/T-Pot-To-AbuseIPDB/pulls)!
 
 ## 💬 Support and Community
 Do you have any issues, questions, or just want to receive notifications about important changes and new features?
