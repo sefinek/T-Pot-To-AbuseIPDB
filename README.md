@@ -9,26 +9,25 @@ Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i autom
 
 
 ## 🎯 Główne funkcje
-1. **Inteligentne raportowanie** — zapobiega duplikowaniu zgłoszeń dzięki systemowi cooldown (minimum 15 minut)
-2. **Automatyczne kategoryzowanie** — skrypt sam przypisuje odpowiednie kategorie nadużyć na podstawie typu ataku (SSH brute-force, port scan, itp.)
-3. **Raportowanie zbiorcze (bulk)** — automatyczne buforowanie i wysyłanie IP pakietami po osiągnięciu limitu dziennego
-4. **Ochrona przed przepełnieniem** — maksymalnie 100,000 IP w buforze, zabezpieczenie przed wyciekiem pamięci
-5. **Retry logic** — automatyczne ponawianie nieudanych żądań HTTP (3 próby z 7-sekundowym opóźnieniem)
-6. **Wsparcie dla IPv6** — pełne wsparcie dla adresów IPv6 z automatycznym wykrywaniem
-7. **Filtrowanie ruchu** — pomijanie ruchu UDP i adresów IP specjalnego przeznaczenia (lokalne, prywatne)
-8. **Powiadomienia Discord** — opcjonalne powiadomienia o zdarzeniach, błędach i dzienne podsumowania statystyk ataków
-9. **Historia IP** — opcjonalne zapisywanie historii aktywności dla każdego IP w osobnych plikach
-10. **Automatyczne aktualizacje** — możliwość włączenia automatycznych aktualizacji przez Git z harmonogramem cron
-11. **Dynamiczne IP** — cykliczne sprawdzanie publicznego IP (co 6h domyślnie) zapobiega przypadkowemu zgłoszeniu własnego adresu
-12. **Graceful shutdown** — bezpieczne wyłączanie z zapisem buforów i zamknięciem watchers
-13. **Monitoring wersji** — automatyczne sprawdzanie, czy używasz najnowszej wersji projektu
-14. **Wsparcie PM2** — gotowa konfiguracja ekosystemu do uruchomienia w środowisku produkcyjnym
+1. ✅ Inteligentne raportowanie z cooldown minimum 15 minut zapobiega duplikatom
+2. ✅ Skrypt automatycznie przypisuje kategorie nadużyć na podstawie typu ataku
+3. ✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitu API
+4. ✅ Ochrona przed przepełnieniem bufora
+5. ✅ Automatyczne ponawianie nieudanych żądań
+6. ✅ Pełne wsparcie dla IPv4 oraz IPv6
+7. ✅ Pomijanie ruchu UDP oraz lokalnych adresów IP
+8. ✅ Opcjonalne powiadomienia Discord z alertami i dziennymi statystykami
+9. ✅ Opcjonalne zapisywanie historii aktywności IP do plików
+10. ✅ Automatyczne aktualizacje przez Git z harmonogramem cron
+11. ✅ Cykliczne sprawdzanie dynamicznego IP, które zapobiegnie auto-raportowaniu
+12. ✅ Automatyczne sprawdzanie najnowszej wersji repozytorium i powiadamianie o nowych wersjach
+13. ✅ Gotowa konfiguracja produkcyjna dla PM2
 
 
 ## 🐝 Obsługiwane honeypoty (więcej wkrótce)
-1. ✅ COWRIE
-2. ✅ DIONAEA
-3. ✅ HONEYTRAP
+- COWRIE
+- DIONAEA
+- HONEYTRAP
 
 > [!NOTE]
 > Skrypt automatycznie pomija ruch UDP (zgodnie z zasadami AbuseIPDB) oraz adresy IP specjalnego przeznaczenia (localhost, prywatne, link-local, multicast).
