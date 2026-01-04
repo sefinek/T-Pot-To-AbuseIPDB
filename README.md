@@ -55,12 +55,9 @@ Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o 
 
 
 ## 🚀 Instalacja i konfiguracja
-### 1. Instalacja Node.js i npm
-Jeśli nie masz zainstalowanego Node.js, skorzystaj z poniższego skryptu:
-- 📘 [Instalacja Node.js i npm](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649)
-
-Opcjonalnie możesz zaktualizować Git do najnowszej wersji:
-- 📘 [Aktualizacja Git](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada)
+### 1. Instalacja Node.js & Git
+Jeśli nie masz zainstalowanego Node.js: [Kliknij mnie](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649)  
+Jeśli nie masz zainstalowanego Gita: [Kliknij mnie](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada)
 
 ### 2. Klonowanie repozytorium
 ```bash
