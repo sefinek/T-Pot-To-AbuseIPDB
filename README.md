@@ -62,7 +62,7 @@ git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
 
 > [!IMPORTANT]
-> Flaga `--recurse-submodules` jest wymagana, aby poprawnie zainicjalizować i pobrać submoduł [sefinek/IPDB-Integration-Scripts](https://github.com/sefinek/IPDB-Integration-Scripts).
+> Flaga `--recurse-submodules` jest wymagana, aby poprawnie pobrać submoduł [sefinek/IPDB-Integration-Scripts](https://github.com/sefinek/IPDB-Integration-Scripts).
 
 ### 3. Instalacja zależności npm
 ```bash
