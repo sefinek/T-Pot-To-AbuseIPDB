@@ -136,7 +136,6 @@ DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',  // Display name (use 'SERVER_ID' for aut
 DISCORD_USER_ID: 'your-discord-id'      // You will receive mentions (@mention) on important events
 ```
 
-**Discord Features:**  
 📊 **Daily summaries**: automatically generated daily attack statistics  
 🚨 **Error notifications**: instant alerts for critical issues  
 ✅ **Startup confirmations**: notification when the script starts successfully  
