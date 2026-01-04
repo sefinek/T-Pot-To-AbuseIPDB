@@ -28,7 +28,7 @@ Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i autom
 > Skrypt automatycznie pomija ruch UDP (zgodnie z zasadami AbuseIPDB) oraz adresy IP specjalnego przeznaczenia (localhost, prywatne, link-local, multicast).
 
 > [!NOTE]
-> Repozytorium jest w fazie beta i wciąż jest rozwijane. Zachęcam do robienia Pull Requestów i zgłaszania problemów!
+> Repozytorium jest jest rozwijane. Zachęcam do robienia Pull Requestów i zgłaszania problemów!
 
 
 ## 💬 Wsparcie i społeczność
