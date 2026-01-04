@@ -9,7 +9,7 @@ Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i autom
 
 
 ## 🎯 Główne funkcje
-1. Wsparcie dla Cowrie, Dionaea oraz Honeytrap (więcej wkrótce)
+1. ✅ Wsparcie dla Cowrie, Dionaea oraz Honeytrap (więcej wkrótce)
 2. ✅ Inteligentne raportowanie z cooldown minimum 15 minut zapobiega duplikatom
 3. ✅ Skrypt automatycznie przypisuje kategorie nadużyć na podstawie typu ataku
 4. ✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitu API
