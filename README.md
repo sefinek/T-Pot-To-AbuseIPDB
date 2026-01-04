@@ -113,7 +113,7 @@ IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000, // Czas między raportami tego samego IP
 #### 📝 Historia IP (opcjonalnie)
 ```javascript
 LOG_IP_HISTORY_ENABLED: false,        // Włącz zapisywanie historii
-LOG_IP_HISTORY_DIR: './data'         // Katalog dla historii IP
+LOG_IP_HISTORY_DIR: './data'          // Katalog dla historii IP
 ```
 
 #### 🔔 Discord webhooks (opcjonalnie)
