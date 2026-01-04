@@ -106,8 +106,8 @@ HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json',
 #### 🌐 Ustawienia sieci
 ```javascript
 IP_ASSIGNMENT: 'dynamic',             // 'static' lub 'dynamic'
-IP_REFRESH_SCHEDULE: '0 */6 * * *',   // Sprawdzanie IP co 6 godzin (dla dynamic)
-IPv6_SUPPORT: true                    // Włącz, jeśli masz publiczny IPv6
+IP_REFRESH_SCHEDULE: '0 */6 * * *',   // Sprawdzanie IP co 6 godzin
+IPv6_SUPPORT: true                    // true, jeśli twój ISP udostępnia Ci IPv6
 ```
 
 #### ⏱️ Zarządzanie raportami
