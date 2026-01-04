@@ -56,8 +56,8 @@ Do you have any issues, questions, or just want to receive notifications about i
 ## 🚀 Installation and Configuration
 
 ### 1. Installing Node.js & Git
-If you don’t have Node.js installed, [click here](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649).
-If you don’t have Git installed, [click here](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada).
+If you don't have Node.js installed, [click here](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649).
+If you don't have Git installed, [click here](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada).
 
 ### 2. Cloning the Repository
 ```bash
