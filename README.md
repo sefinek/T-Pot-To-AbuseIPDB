@@ -4,31 +4,31 @@
 [![Node.js](https://img.shields.io/github/package-json/engines/node/sefinek/T-Pot-To-AbuseIPDB?logo=node.js&logoColor=white&color=339933)](https://nodejs.org)
 [![Last Commit](https://img.shields.io/github/last-commit/sefinek/T-Pot-To-AbuseIPDB?label=last%20commit)](https://github.com/sefinek/T-Pot-To-AbuseIPDB/commits)
 
-Automatyczny system raportowania złośliwych aktywności wykrytych przez honeypoty T-Pot do bazy danych AbuseIPDB.
+Integracyjny system raportowania złośliwych aktywności wykrytych przez honeypoty T-Pot do bazy danych AbuseIPDB.
 Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i automatycznie zgłasza je.
 
 
-## 🎯 Główne funkcje
-✅ Wsparcie dla Cowrie, Dionaea oraz Honeytrap (więcej wkrótce).  
-✅ Inteligentne raportowanie z cooldown minimum 15 minut zapobiega duplikatom.  
-✅ Skrypt automatycznie przypisuje kategorie nadużyć na podstawie typu ataku.  
-✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitu API.  
-✅ Ochrona przed przepełnieniem bufora.  
-✅ Automatyczne ponawianie nieudanych żądań.  
-✅ Pełne wsparcie dla IPv4 oraz IPv6.  
-✅ Pomijanie ruchu UDP oraz lokalnych adresów IP.  
-✅ Opcjonalne powiadomienia Discord z alertami i dziennymi statystykami.  
-✅ Opcjonalne zapisywanie historii aktywności IP do plików.  
-✅ Automatyczne aktualizacje przez Git z harmonogramem cron.  
-✅ Cykliczne sprawdzanie dynamicznego IP, które zapobiegnie auto-raportowaniu.  
-✅ Automatyczne sprawdzanie najnowszej wersji repozytorium i powiadamianie o nowych wersjach.  
-✅ Gotowa konfiguracja produkcyjna dla PM2.
+### 🎯 Główne funkcje
+✅ Obsługa honeypotów **Cowrie**, **Dionaea** oraz **Honeytrap** (kolejne w planach).  
+✅ Inteligentny mechanizm raportowania z minimalnym cooldownem **15 minut**, skutecznie eliminujący duplikaty zgłoszeń.  
+✅ Automatyczne przypisywanie kategorii nadużyć na podstawie wykrytego typu ataku.  
+✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitów API.  
+✅ Mechanizmy ochrony przed przepełnieniem bufora oraz utratą danych.  
+✅ Automatyczne ponawianie nieudanych żądań do API.  
+✅ Pełna obsługa adresów **IPv4** oraz **IPv6**.  
+✅ Automatyczne pomijanie ruchu **UDP** oraz adresów IP specjalnego przeznaczenia (lokalne, prywatne, multicast).  
+✅ Opcjonalne powiadomienia **Discord** z alertami o atakach oraz dziennymi statystykami.  
+✅ Opcjonalne zapisywanie historii aktywności adresów IP do plików.  
+✅ Automatyczne aktualizacje projektu przez **Git** z wykorzystaniem harmonogramu **cron**.  
+✅ Cykliczne sprawdzanie publicznego adresu IP w celu zapobiegania auto-raportowaniu.  
+✅ Automatyczne wykrywanie nowych wersji repozytorium i powiadamianie o dostępnych aktualizacjach.  
+✅ Gotowa, produkcyjna konfiguracja dla **PM2**.
 
 > [!NOTE]
 > Skrypt automatycznie pomija ruch UDP (zgodnie z zasadami AbuseIPDB) oraz adresy IP specjalnego przeznaczenia (localhost, prywatne, link-local, multicast).
 
 > [!NOTE]
-> Repozytorium jest jest rozwijane. Zachęcam do robienia Pull Requestów i zgłaszania problemów!
+> Repozytorium jest aktywnie rozwijane. Zachęcam do zgłaszania problemów oraz tworzenia Pull Requestów.
 
 
 ## 💬 Wsparcie i społeczność
