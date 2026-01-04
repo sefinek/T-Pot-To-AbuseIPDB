@@ -9,20 +9,20 @@ Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i autom
 
 
 ## 🎯 Główne funkcje
-1. ✅ Wsparcie dla Cowrie, Dionaea oraz Honeytrap (więcej wkrótce)
-2. ✅ Inteligentne raportowanie z cooldown minimum 15 minut zapobiega duplikatom
-3. ✅ Skrypt automatycznie przypisuje kategorie nadużyć na podstawie typu ataku
-4. ✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitu API
-5. ✅ Ochrona przed przepełnieniem bufora
-6. ✅ Automatyczne ponawianie nieudanych żądań
-7. ✅ Pełne wsparcie dla IPv4 oraz IPv6
-8. ✅ Pomijanie ruchu UDP oraz lokalnych adresów IP
-9. ✅ Opcjonalne powiadomienia Discord z alertami i dziennymi statystykami
-10. ✅ Opcjonalne zapisywanie historii aktywności IP do plików
-11. ✅ Automatyczne aktualizacje przez Git z harmonogramem cron
-12. ✅ Cykliczne sprawdzanie dynamicznego IP, które zapobiegnie auto-raportowaniu
-13. ✅ Automatyczne sprawdzanie najnowszej wersji repozytorium i powiadamianie o nowych wersjach
-14. ✅ Gotowa konfiguracja produkcyjna dla PM2
+✅ Wsparcie dla Cowrie, Dionaea oraz Honeytrap (więcej wkrótce).  
+✅ Inteligentne raportowanie z cooldown minimum 15 minut zapobiega duplikatom.  
+✅ Skrypt automatycznie przypisuje kategorie nadużyć na podstawie typu ataku.  
+✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitu API.  
+✅ Ochrona przed przepełnieniem bufora.  
+✅ Automatyczne ponawianie nieudanych żądań.  
+✅ Pełne wsparcie dla IPv4 oraz IPv6.  
+✅ Pomijanie ruchu UDP oraz lokalnych adresów IP.  
+✅ Opcjonalne powiadomienia Discord z alertami i dziennymi statystykami.  
+✅ Opcjonalne zapisywanie historii aktywności IP do plików.  
+✅ Automatyczne aktualizacje przez Git z harmonogramem cron.  
+✅ Cykliczne sprawdzanie dynamicznego IP, które zapobiegnie auto-raportowaniu.  
+✅ Automatyczne sprawdzanie najnowszej wersji repozytorium i powiadamianie o nowych wersjach.  
+✅ Gotowa konfiguracja produkcyjna dla PM2.
 
 > [!NOTE]
 > Skrypt automatycznie pomija ruch UDP (zgodnie z zasadami AbuseIPDB) oraz adresy IP specjalnego przeznaczenia (localhost, prywatne, link-local, multicast).
