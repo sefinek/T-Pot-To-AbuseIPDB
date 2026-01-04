@@ -37,7 +37,7 @@ If you found this project useful, consider giving it a star! It will greatly mot
 Do you have any issues, questions, or just want to receive notifications about important changes and new features?
 
 💬 Join my [Discord server](https://discord.gg/S7NDzCzQTg)!  
-🐛 Not using Discord? You can open an [issue on GitHub](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues)
+🐛 Not using Discord? You can open an [issue on GitHub](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues).
 
 
 ## 📦 System Requirements
