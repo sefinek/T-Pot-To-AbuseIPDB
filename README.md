@@ -84,12 +84,12 @@ Następnie otwórz plik `config.js` w swoim ulubionym edytorze tekstu (np. `mced
 > [!IMPORTANT]
 > Musisz uzyskać klucz API z [AbuseIPDB](https://www.abuseipdb.com/account/api). Bez niego skrypt nie będzie działać.
 
-```javascript
+```js
 ABUSEIPDB_API_KEY: 'twój-klucz-api' // Uzyskaj z https://www.abuseipdb.com/account/api
 ```
 
 #### 🖥️ Ustawienia serwera
-```javascript
+```js
 SERVER_ID: 'pl-waw-honeypot', // Identyfikator twojego honeypota (np. 'pl-waw-honeypot', 'home-honeypot')
 EXTENDED_LOGS: false          // Szczegółowe logowanie (może się przydać do debugowania ewentualnych problemów)
 ```
@@ -97,21 +97,21 @@ EXTENDED_LOGS: false          // Szczegółowe logowanie (może się przydać do
 #### 📁 Ścieżki do logów
 Dostosuj ścieżki, jeśli T-Pot jest zainstalowany w innej lokalizacji:
 
-```javascript
+```js
 COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
 DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
 HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json'
 ```
 
 #### 🌐 Ustawienia sieci
-```javascript
+```js
 IP_ASSIGNMENT: 'dynamic',             // 'static' lub 'dynamic'
 IP_REFRESH_SCHEDULE: '0 */6 * * *',   // Sprawdzanie IP co 6 godzin
 IPv6_SUPPORT: true                    // true, jeśli twój ISP udostępnia Ci IPv6
 ```
 
 #### ⏱️ Zarządzanie raportami
-```javascript
+```js
 IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Czas między raportami tego samego IP (domyślnie 6 godzin)
                                        // UWAGA: Minimum to 15 minut (900000 ms) - wymóg AbuseIPDB
 ```
@@ -121,13 +121,13 @@ IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Czas między raportami tego samego IP 
 > gromadzi nowe adresy IP oraz wysyła je zbiorczo następnego dnia w sposób zgodny z limitami API AbuseIPDB.
 
 #### 📝 Historia IP (opcjonalnie)
-```javascript
+```js
 LOG_IP_HISTORY_ENABLED: false, // Włącz zapisywanie historii
 LOG_IP_HISTORY_DIR: './data'   // Katalog dla historii IP
 ```
 
 #### 🔔 Discord webhooks (opcjonalnie)
-```javascript
+```js
 DISCORD_WEBHOOK_ENABLED: false,
 DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/...',
 DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',  // Nazwa wyświetlana jako autor (użyj 'SERVER_ID' dla automatycznej nazwy)
@@ -146,7 +146,7 @@ DISCORD_USER_ID: 'twój-discord-id'      // Otrzymasz wzmianki (@mention) w waż
 > [!WARNING]
 > Nie są one zalecane ze względu na potencjalne problemy z kompatybilnością. Włącz tę funkcję, tylko jeśli aktywnie monitorujesz serwer i jesteś gotowy na interwencję w przypadku problemów.
 
-```javascript
+```js
 AUTO_UPDATE_ENABLED: false,              // Włącz tylko jeśli aktywnie monitorujesz serwer
 AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *' // Harmonogram aktualizacji
 ```
