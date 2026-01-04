@@ -45,7 +45,7 @@ Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o 
 - **T-Pot** (zainstalowany i poprawnie działający honeypot)
 - **Klucz API AbuseIPDB** ([kliknij, aby uzyskać](https://www.abuseipdb.com/account/api))
 - **Webhook Discorda** (do powiadomień o atakach i błędach, opcjonalnie)
-- Dostęp do logów T-Pot (domyślna lokalizacja: `~/tpotce/data/`)
+- **Dostęp do logów T-Pot** (domyślna lokalizacja: `~/tpotce/data/`)
 
 > [!NOTE]
 > Jeśli zostanie osiągnięty dzienny limit API, skrypt automatycznie przełączy się w tryb buforowania i wyśle raport zbiorczy następnego dnia.
