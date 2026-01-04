@@ -8,18 +8,17 @@
 Automatyczny system raportowania złośliwych aktywności wykrytych przez honeypoty T-Pot do bazy danych AbuseIPDB. Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i automatycznie zgłasza złośliwe adresy IP do AbuseIPDB, pomagając w budowaniu globalnej bazy danych zagrożeń cyberbezpieczeństwa.
 
 ### 🎯 Główne funkcje
-- **Automatyczne monitorowanie logów** z wielu honeypotów T-Pot
-- **Inteligentne raportowanie** zapobiega duplikowaniu zgłoszeń dzięki systemowi cooldown
-- **Wsparcie dla IPv6** pełne wsparcie dla adresów IPv6
-- **Powiadomienia Discord** opcjonalne powiadomienia o zdarzeniach i błędach
-- **Historia IP** opcjonalne zapisywanie historii aktywności dla każdego IP
-- **Automatyczne aktualizacje** możliwość włączenia automatycznych aktualizacji
-- **Dynamiczne IP** automatyczne wykrywanie zmiany publicznego IP (zapobiega przypadkowemu zgłoszeniu własnego IP)
+- **Inteligentne raportowanie** - zapobiega duplikowaniu zgłoszeń dzięki systemowi cooldown
+- **Wsparcie dla IPv6** - pełne wsparcie dla adresów IPv6
+- **Powiadomienia Discord** - opcjonalne powiadomienia o zdarzeniach i błędach
+- **Historia IP** - opcjonalne zapisywanie historii aktywności dla każdego IP
+- **Automatyczne aktualizacje** - możliwość włączenia automatycznych aktualizacji
+- **Dynamiczne IP** - automatyczne wykrywanie zmiany publicznego IP (zapobiega przypadkowemu zgłoszeniu własnego IP)
 
 ### 🐝 Obsługiwane honeypoty
-- ✅ **COWRIE** SSH/Telnet honeypot
-- ✅ **DIONAEA** honeypot dla różnych protokołów
-- ✅ **HONEYTRAP** niskopoziomowy honeypot sieciowy
+- ✅ **COWRIE** - SSH/Telnet honeypot
+- ✅ **DIONAEA** - honeypot dla różnych protokołów
+- ✅ **HONEYTRAP** - niskopoziomowy honeypot sieciowy
 
 > [!NOTE]
 > Repozytorium jest w fazie beta i wciąż jest rozwijane. Zachęcam do robienia Pull Requestów i zgłaszania problemów!
@@ -33,8 +32,6 @@ Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o 
 
 
 ## 📦 Wymagania systemowe
-
-### Wymagane oprogramowanie
 - **Node.js** w wersji 20.x lub nowszej
 - **npm** w wersji 11.x lub nowszej
 - **Git** (zalecana najnowsza wersja)
@@ -218,13 +215,9 @@ CONNECT myip.wtf:443
 User-Agent: Go-http-client/1.1; 13261 [2] TCP
 ```
 
+
 ## 🤝 Współtworzenie
-Wkład w rozwój projektu jest mile widziany! Jeśli chcesz pomóc:
-1. Zforkuj repozytorium
-2. Stwórz gałąź dla swojej funkcji (`git checkout -b feature/AmazingFeature`)
-3. Zatwierdź zmiany (`git commit -m 'Add some AmazingFeature'`)
-4. Wypchnij do gałęzi (`git push origin feature/AmazingFeature`)
-5. Otwórz Pull Request
+Wkład w rozwój projektu jest mile widziany!
 
 
 ## 📄 Licencja
