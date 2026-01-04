@@ -33,8 +33,9 @@ Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i autom
 
 ## 💬 Wsparcie i społeczność
 Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o ważnych zmianach i nowych funkcjach?
-- 💬 Dołącz do mojego [serwera Discord](https://discord.gg/S7NDzCzQTg)!
-- 🐛 Nie korzystasz z Discorda? Możesz otworzyć [issue na GitHubie](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues)
+
+💬 Dołącz na mój [serwer Discord](https://discord.gg/S7NDzCzQTg)!  
+🐛 Nie korzystasz z Discorda? Możesz otworzyć [issue na GitHubie](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues)
 
 
 ## 📦 Wymagania systemowe
