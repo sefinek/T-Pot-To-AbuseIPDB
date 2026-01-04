@@ -51,7 +51,7 @@ Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o 
 - **(Opcjonalnie)** Discord webhook dla powiadomień o atakach i błędach
 
 > [!NOTE]
-> AbuseIPDB posiada dzienne limity raportowania. Po osiągnięciu limitu skrypt automatycznie przełącza się na tryb buforowania i wysyła raporty zbiorcze następnego dnia.
+> AbuseIPDB posiada dzienne limity raportowania. Po osiągnięciu limitu skrypt automatycznie przełącza się na tryb buforowania i wyśle raport zbiorczy następnego dnia.
 
 
 ## 🚀 Instalacja i konfiguracja
