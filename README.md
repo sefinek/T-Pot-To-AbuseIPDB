@@ -39,25 +39,22 @@ Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o 
 
 
 ## 📦 Wymagania systemowe
-- **Node.js** w wersji **20.x lub nowszej** (sprawdź: `node -v`)
-- **npm** w wersji **11.x lub nowszej** (sprawdź: `npm -v`)
+- **Node.js** w wersji **20.x lub nowszej** (sprawdź poleceniem: `node -v`)
+- **npm** w wersji **11.x lub nowszej** (sprawdź poleceniem: `npm -v`)
 - **Git** (zalecana najnowsza wersja)
-- **T-Pot** - zainstalowany i działający honeypot
-- Dostęp do logów T-Pot (domyślnie w `~/tpotce/data/`)
-
-### Wymagane usługi
-- **Konto AbuseIPDB** - zarejestruj się na [AbuseIPDB.com](https://www.abuseipdb.com/register)
-- **Klucz API AbuseIPDB** - uzyskaj z [panelu API](https://www.abuseipdb.com/account/api)
-- **(Opcjonalnie)** Discord webhook dla powiadomień o atakach i błędach
+- **T-Pot** (zainstalowany i poprawnie działający honeypot)
+- **Klucz API AbuseIPDB** ([kliknij, aby uzyskać](https://www.abuseipdb.com/account/api))
+- **Webhook Discorda** (do powiadomień o atakach i błędach, opcjonalnie)
+- Dostęp do logów T-Pot (domyślna lokalizacja: `~/tpotce/data/`)
 
 > [!NOTE]
-> Jeśli serwer natknie się na dzienny limit API, skrypt automatycznie przełączy się na tryb buforowania i wyśle raport zbiorczy następnego dnia.
+> Jeśli zostanie osiągnięty dzienny limit API, skrypt automatycznie przełączy się w tryb buforowania i wyśle raport zbiorczy następnego dnia.
 
 
 ## 🚀 Instalacja i konfiguracja
 ### 1. Instalacja Node.js & Git
-Jeśli nie masz zainstalowanego Node.js: [Kliknij mnie](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649)  
-Jeśli nie masz zainstalowanego Gita: [Kliknij mnie](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada)
+Jeśli nie masz zainstalowanego Node.js: [kliknij mnie](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649)  
+Jeśli nie masz zainstalowanego Gita: [kliknij mnie](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada)
 
 ### 2. Klonowanie repozytorium
 ```bash
@@ -65,7 +62,7 @@ git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
 
 > [!IMPORTANT]
-> Flaga `--recurse-submodules` jest wymagana do pobrania wszystkich zależności projektu.
+> Flaga `--recurse-submodules` jest wymagana, aby poprawnie zainicjalizować i pobrać submoduł [sefinek/IPDB-Integration-Scripts](https://github.com/sefinek/IPDB-Integration-Scripts).
 
 ### 3. Instalacja zależności npm
 ```bash
@@ -198,16 +195,18 @@ pm2 flush                  # Wyczyść wszystkie logi
 ```
 
 ### 6. Aktualizacja projektu
-Aby zaktualizować projekt do najnowszej wersji, uruchom:
+Aby zaktualizować projekt do najnowszej wersji, wykonaj polecenie:
 ```bash
 npm run update
 ```
 
 Skrypt automatycznie:
-- Pobierze najnowsze zmiany z repozytorium Git
-- Zaktualizuje submoduły
-- Zainstaluje zależności
-- Zrestartuje proces PM2
+- pobierze najnowsze zmiany z repozytorium Git,
+- zaktualizuje submoduły,
+- zaktualizuje wymagane zależności npm,
+- zrestartuje proces PM2.
+
+Po tej operacji sprawdź za pomocą `pm2 logs`, czy wszystko działa poprawnie.
 
 
 ## 📊 Przykładowe raporty
@@ -255,10 +254,6 @@ User-Agent: Go-http-client/1.1; 13261 [2] TCP
 ```
 
 
-## 🤝 Współtworzenie
-Wkład w rozwój projektu jest mile widziany!
-
-
 ## 📄 Licencja
 Ten projekt jest licencjonowany na podstawie licencji GNU General Public License v3.0 - szczegóły w pliku [LICENSE](LICENSE).
 
@@ -270,7 +265,8 @@ Ten projekt jest licencjonowany na podstawie licencji GNU General Public License
 
 
 ## ⭐ Podziękowania
-Jeśli ten projekt okazał się dla Ciebie przydatny, rozważ oznaczenie go gwiazdką na GitHubie! Zdecydowanie zmotywuje mnie to do dalszego rozwoju.
+Jeśli ten projekt okazał się dla Ciebie przydatny, rozważ oznaczenie go gwiazdką!
+Zdecydowanie zmotywuje mnie to do jego dalszego rozwoju.
 
 
 ---
