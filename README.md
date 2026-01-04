@@ -4,20 +4,34 @@
 [![Node.js](https://img.shields.io/github/package-json/engines/node/sefinek/T-Pot-To-AbuseIPDB?logo=node.js&logoColor=white&color=339933)](https://nodejs.org)
 [![Last Commit](https://img.shields.io/github/last-commit/sefinek/T-Pot-To-AbuseIPDB?label=last%20commit)](https://github.com/sefinek/T-Pot-To-AbuseIPDB/commits)
 
-Automatyczny system raportowania złośliwych aktywności wykrytych przez honeypoty T-Pot do bazy danych AbuseIPDB. Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i automatycznie zgłasza złośliwe adresy IP do AbuseIPDB, pomagając w budowaniu globalnej bazy danych zagrożeń cyberbezpieczeństwa.
+Automatyczny system raportowania złośliwych aktywności wykrytych przez honeypoty T-Pot do bazy danych AbuseIPDB.
+Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i automatycznie zgłasza je.
 
-### 🎯 Główne funkcje
-- **Inteligentne raportowanie** - zapobiega duplikowaniu zgłoszeń dzięki systemowi cooldown
-- **Wsparcie dla IPv6** - pełne wsparcie dla adresów IPv6
-- **Powiadomienia Discord** - opcjonalne powiadomienia o zdarzeniach i błędach
-- **Historia IP** - opcjonalne zapisywanie historii aktywności dla każdego IP
-- **Automatyczne aktualizacje** - możliwość włączenia automatycznych aktualizacji
-- **Dynamiczne IP** - automatyczne wykrywanie zmiany publicznego IP (zapobiega przypadkowemu zgłoszeniu własnego IP)
 
-### 🐝 Obsługiwane honeypoty
-- ✅ **COWRIE** - SSH/Telnet honeypot
-- ✅ **DIONAEA** - honeypot dla różnych protokołów
-- ✅ **HONEYTRAP** - niskopoziomowy honeypot sieciowy
+## 🎯 Główne funkcje
+1. **Inteligentne raportowanie** — zapobiega duplikowaniu zgłoszeń dzięki systemowi cooldown (minimum 15 minut)
+2. **Automatyczne kategoryzowanie** — skrypt sam przypisuje odpowiednie kategorie nadużyć na podstawie typu ataku (SSH brute-force, port scan, itp.)
+3. **Raportowanie zbiorcze (bulk)** — automatyczne buforowanie i wysyłanie IP pakietami po osiągnięciu limitu dziennego
+4. **Ochrona przed przepełnieniem** — maksymalnie 100,000 IP w buforze, zabezpieczenie przed wyciekiem pamięci
+5. **Retry logic** — automatyczne ponawianie nieudanych żądań HTTP (3 próby z 7-sekundowym opóźnieniem)
+6. **Wsparcie dla IPv6** — pełne wsparcie dla adresów IPv6 z automatycznym wykrywaniem
+7. **Filtrowanie ruchu** — pomijanie ruchu UDP i adresów IP specjalnego przeznaczenia (lokalne, prywatne)
+8. **Powiadomienia Discord** — opcjonalne powiadomienia o zdarzeniach, błędach i dzienne podsumowania statystyk ataków
+9. **Historia IP** — opcjonalne zapisywanie historii aktywności dla każdego IP w osobnych plikach
+10. **Automatyczne aktualizacje** — możliwość włączenia automatycznych aktualizacji przez Git z harmonogramem cron
+11. **Dynamiczne IP** — cykliczne sprawdzanie publicznego IP (co 6h domyślnie) zapobiega przypadkowemu zgłoszeniu własnego adresu
+12. **Graceful shutdown** — bezpieczne wyłączanie z zapisem buforów i zamknięciem watchers
+13. **Monitoring wersji** — automatyczne sprawdzanie, czy używasz najnowszej wersji projektu
+14. **Wsparcie PM2** — gotowa konfiguracja ekosystemu do uruchomienia w środowisku produkcyjnym
+
+
+## 🐝 Obsługiwane honeypoty (więcej wkrótce)
+1. ✅ COWRIE
+2. ✅ DIONAEA
+3. ✅ HONEYTRAP
+
+> [!NOTE]
+> Skrypt automatycznie pomija ruch UDP (zgodnie z zasadami AbuseIPDB) oraz adresy IP specjalnego przeznaczenia (localhost, prywatne, link-local, multicast).
 
 > [!NOTE]
 > Repozytorium jest w fazie beta i wciąż jest rozwijane. Zachęcam do robienia Pull Requestów i zgłaszania problemów!
@@ -25,25 +39,27 @@ Automatyczny system raportowania złośliwych aktywności wykrytych przez honeyp
 
 ## 💬 Wsparcie i społeczność
 Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o ważnych zmianach i nowych funkcjach?
-
 - 💬 Dołącz do mojego [serwera Discord](https://discord.gg/S7NDzCzQTg)!
 - 🐛 Nie korzystasz z Discorda? Możesz otworzyć [issue na GitHubie](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues)
 
 
 ## 📦 Wymagania systemowe
-- **Node.js** w wersji 20.x lub nowszej
-- **npm** w wersji 11.x lub nowszej
+- **Node.js** w wersji **20.x lub nowszej** (sprawdź: `node -v`)
+- **npm** w wersji **11.x lub nowszej** (sprawdź: `npm -v`)
 - **Git** (zalecana najnowsza wersja)
 - **T-Pot** - zainstalowany i działający honeypot
 - Dostęp do logów T-Pot (domyślnie w `~/tpotce/data/`)
 
 ### Wymagane usługi
-- Konto i klucz API z [AbuseIPDB](https://www.abuseipdb.com/account/api)
-- (Opcjonalnie) Discord webhook dla powiadomień
+- **Konto AbuseIPDB** - zarejestruj się na [AbuseIPDB.com](https://www.abuseipdb.com/register)
+- **Klucz API AbuseIPDB** - uzyskaj z [panelu API](https://www.abuseipdb.com/account/api)
+- **(Opcjonalnie)** Discord webhook dla powiadomień o atakach i błędach
+
+> [!NOTE]
+> AbuseIPDB posiada dzienne limity raportowania. Po osiągnięciu limitu skrypt automatycznie przełącza się na tryb buforowania i wysyła raporty zbiorcze następnego dnia.
 
 
 ## 🚀 Instalacja i konfiguracja
-
 ### 1. Instalacja Node.js i npm
 Jeśli nie masz zainstalowanego Node.js, skorzystaj z poniższego skryptu:
 - 📘 [Instalacja Node.js i npm](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649)
@@ -77,7 +93,7 @@ Następnie edytuj plik `config.js` i skonfiguruj następujące opcje:
 #### 🔑 Wymagane ustawienia
 
 > [!IMPORTANT]
-> Musisz uzyskać klucz API z [AbuseIPDB](https://www.abuseipdb.com/account/api). Bez niego aplikacja nie będzie działać.
+> Musisz uzyskać klucz API z [AbuseIPDB](https://www.abuseipdb.com/account/api). Bez niego skrypt nie będzie działać.
 
 ```javascript
 ABUSEIPDB_API_KEY: 'twój-klucz-api' // Uzyskaj z https://www.abuseipdb.com/account/api
@@ -107,8 +123,17 @@ IPv6_SUPPORT: true                    // Włącz, jeśli masz publiczny IPv6
 
 #### ⏱️ Zarządzanie raportami
 ```javascript
-IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000, // Czas między raportami tego samego IP (minimum 15 minut)
+IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000, // Czas między raportami tego samego IP (domyślnie 6 godzin)
+                                         // UWAGA: Minimum to 15 minut (900000 ms) - wymóg AbuseIPDB
 ```
+
+> [!IMPORTANT]
+> **Raportowanie zbiorcze:** Gdy osiągniesz dzienny limit raportowania, skrypt automatycznie:
+> 1. Przełączy się w tryb buforowania
+> 2. Zbiera nadchodzące IP-y w pamięci (maksymalnie 100,000)
+> 3. Zapisuje bufor do pliku po każdym dodaniu
+> 4. Następnego dnia (00:01 UTC) automatycznie wysyła wszystkie zebrane IP-y w formacie CSV
+> 5. Bufor jest dzielony na mniejsze pakiety jeśli przekracza limity API
 
 #### 📝 Historia IP (opcjonalnie)
 ```javascript
@@ -120,14 +145,21 @@ LOG_IP_HISTORY_DIR: './data'          // Katalog dla historii IP
 ```javascript
 DISCORD_WEBHOOK_ENABLED: false,
 DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/...',
-DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',
-DISCORD_USER_ID: 'twój-discord-id'
+DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',  // Nazwa wyświetlana jako autor (użyj 'SERVER_ID' dla automatycznej nazwy)
+DISCORD_USER_ID: 'twój-discord-id'      // Otrzymasz wzmianki (@mention) w ważnych zdarzeniach
 ```
+
+**Funkcje Discord:**
+- 📊 **Dzienne podsumowania** - automatycznie generowane statystyki ataków wysyłane codziennie
+- 🚨 **Powiadomienia o błędach** - natychmiastowe alerty o krytycznych problemach
+- ✅ **Potwierdzenia startu** - powiadomienie gdy skrypt uruchomi się pomyślnie
+- 🔄 **Informacje o aktualizacjach** - powiadomienia o nowych wersjach
+- ⚡ **Rate limiting** - max 3 wiadomości co 3 sekundy (ochrona przed banem Discord)
 
 #### 🔄 Automatyczne aktualizacje
 
 > [!WARNING]
-> Automatyczne aktualizacje są niezalecane ze względu na potencjalne problemy z kompatybilnością. Włączaj tylko jeśli aktywnie monitorujesz serwer i jesteś gotowy na interwencję w przypadku problemów.
+> Nie są one zalecane ze względu na potencjalne problemy z kompatybilnością. Włącz tę funkcję, tylko jeśli aktywnie monitorujesz serwer i jesteś gotowy na interwencję w przypadku problemów.
 
 ```javascript
 AUTO_UPDATE_ENABLED: false,              // Włącz tylko jeśli aktywnie monitorujesz serwer
@@ -140,14 +172,15 @@ node .
 ```
 
 #### Uruchomienie w trybie produkcyjnym z PM2
-PM2 to menedżer procesów Node.js, który pozwala na uruchomienie aplikacji w tle i automatyczne ponowne uruchomienie w przypadku awarii. To repozytorium zawiera już gotową konfigurację ekosystemu PM2, więc nie musisz niczego więcej robić. 😉
+PM2 to menedżer procesów Node.js, który pozwala na uruchomienie skryptu w tle i automatyczne ponowne uruchomienie w przypadku awarii.
+To repozytorium zawiera już gotową konfigurację ekosystemu PM2, więc nie musisz niczego więcej robić. 😉
 
 **Instalacja PM2:**
 ```bash
 npm install pm2 -g
 ```
 
-**Uruchomienie aplikacji:**
+**Uruchomienie:**
 ```bash
 pm2 start
 ```
@@ -162,16 +195,31 @@ eval "$(pm2 startup | grep sudo)"
 
 **Przydatne komendy PM2:**
 ```bash
-pm2 logs                   # Wyświetl logi każdego procesu Node.js w czasie rzeczywistym
-pm2 list                   # Status każdej uruchomionej aplikacji
-pm2 restart tpot-abuseipdb # Restart konkretnej aplikacji
-pm2 stop tpot-abuseipdb    # Zatrzymaj konkretną aplikację
-pm2 delete tpot-abuseipdb  # Usuń konkretną aplikację z PM2
+pm2 logs                   # Wyświetl logi wszystkich procesów w czasie rzeczywistym
+pm2 logs tpot-abuseipdb    # Wyświetl logi tylko tego skryptu
+pm2 list                   # Status wszystkich uruchomionych procesów
+pm2 restart tpot-abuseipdb # Restart skryptu
+pm2 stop tpot-abuseipdb    # Zatrzymaj skrypt
+pm2 delete tpot-abuseipdb  # Usuń skrypt z PM2
+pm2 monit                  # Monitoring procesów w czasie rzeczywistym
+pm2 flush                  # Wyczyść wszystkie logi
 ```
+
+### 6. Aktualizacja projektu
+Aby zaktualizować projekt do najnowszej wersji, uruchom:
+```bash
+npm run update
+```
+
+Skrypt automatycznie:
+- Pobierze najnowsze zmiany z repozytorium Git
+- Zaktualizuje submoduły
+- Zainstaluje zależności
+- Zrestartuje proces PM2
 
 
 ## 📊 Przykładowe raporty
-Poniżej znajdziesz przykłady raportów generowanych przez narzędzie na podstawie różnych typów ataków.
+Poniżej znajdziesz przykłady raportów generowanych przez skrypt na podstawie różnych typów ataków.
 
 ### Atak brute-force na SSH
 ```text
