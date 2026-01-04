@@ -1,101 +1,97 @@
-# T-Pot do AbuseIPDB
+# T-Pot to AbuseIPDB
 [![License: GPL v3](https://img.shields.io/github/license/sefinek/T-Pot-To-AbuseIPDB)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version](https://img.shields.io/github/package-json/v/sefinek/T-Pot-To-AbuseIPDB?label=version)](https://github.com/sefinek/T-Pot-To-AbuseIPDB)
-[![Node.js](https://img.shields.io/github/package-json/engines/node/sefinek/T-Pot-To-AbuseIPDB?logo=node.js&logoColor=white&color=339933)](https://nodejs.org)
+[![Node.js](https://img.shields.io/github/package-json/engines/node/sefinek/T-Pot-To-AbuseIPDB?logo=node.js\&logoColor=white\&color=339933)](https://nodejs.org)
 [![Last Commit](https://img.shields.io/github/last-commit/sefinek/T-Pot-To-AbuseIPDB?label=last%20commit)](https://github.com/sefinek/T-Pot-To-AbuseIPDB/commits)
 
-Integracja do AbuseIPDB umożliwiająca automatyczne raportowanie złośliwych aktywności wykrywanych przez honeypoty T-Pot.
-Skrypt monitoruje logi, analizuje próby ataków i automatycznie je zgłasza.
+Integration with AbuseIPDB that enables automatic reporting of malicious activity detected by T-Pot honeypots.
+The script monitors logs, analyzes attack attempts, and reports them automatically.
 
-
-### 🎯 Główne funkcje
-✅ Obsługa honeypotów **Cowrie**, **Dionaea** oraz **Honeytrap** (kolejne w planach).  
-✅ Inteligentny mechanizm raportowania z minimalnym cooldownem **15 minut**, skutecznie eliminujący duplikaty zgłoszeń.  
-✅ Automatyczne przypisywanie kategorii nadużyć na podstawie wykrytego typu ataku.  
-✅ Pełne wsparcie dla raportowania zbiorczego po osiągnięciu limitów API.  
-✅ Mechanizmy ochrony przed przepełnieniem bufora oraz utratą danych.  
-✅ Automatyczne ponawianie nieudanych żądań do API.  
-✅ Pełna obsługa adresów **IPv4** oraz **IPv6**.  
-✅ Automatyczne pomijanie ruchu **UDP** oraz adresów IP specjalnego przeznaczenia (lokalne, prywatne, multicast).  
-✅ Opcjonalne powiadomienia **Discord** z alertami o atakach oraz dziennymi statystykami.  
-✅ Opcjonalne zapisywanie historii aktywności adresów IP do plików.  
-✅ Automatyczne aktualizacje projektu przez **Git** z wykorzystaniem harmonogramu **cron**.  
-✅ Cykliczne sprawdzanie publicznego adresu IP w celu zapobiegania auto-raportowaniu.  
-✅ Automatyczne wykrywanie nowych wersji repozytorium i powiadamianie o dostępnych aktualizacjach.  
-✅ Gotowa, produkcyjna konfiguracja dla **PM2**.
-
-> [!NOTE]
-> Skrypt automatycznie pomija ruch UDP (zgodnie z zasadami AbuseIPDB) oraz adresy IP specjalnego przeznaczenia (localhost, prywatne, link-local, multicast).
+### 🎯 Key Features
+✅ Support for **Cowrie**, **Dionaea**, and **Honeytrap** honeypots (more planned).  
+✅ Intelligent reporting mechanism with a minimum **15-minute cooldown**, effectively eliminating duplicate reports.  
+✅ Automatic assignment of abuse categories based on the detected attack type.  
+✅ Full support for bulk reporting when API limits are reached.  
+✅ Protection mechanisms against buffer overflow and data loss.  
+✅ Automatic retry of failed API requests.  
+✅ Full support for **IPv4** and **IPv6** addresses.  
+✅ Automatic skipping of **UDP** traffic and special-purpose IP addresses (`local`, `private`, `multicast`).  
+✅ Optional **Discord** notifications with attack alerts and daily statistics.  
+✅ Optional logging of IP activity history to files.  
+✅ Automatic project updates via **Git** using a **cron** schedule.  
+✅ Periodic public IP address checks to prevent self-reporting.  
+✅ Automatic detection of new repository versions with update notifications.  
+✅ Ready-to-use production configuration for **PM2**.
 
 > [!NOTE]
-> Repozytorium jest aktywnie rozwijane. Zachęcam do zgłaszania problemów oraz tworzenia Pull Requestów.
-
-
-## 💬 Wsparcie i społeczność
-Masz jakieś problemy, pytania lub po prostu chcesz otrzymywać powiadomienia o ważnych zmianach i nowych funkcjach?
-
-💬 Dołącz na mój [serwer Discord](https://discord.gg/S7NDzCzQTg)!  
-🐛 Nie korzystasz z Discorda? Możesz otworzyć [issue na GitHubie](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues)
-
-
-## 📦 Wymagania systemowe
-- **Node.js** w wersji **20.x lub nowszej** (sprawdź poleceniem: `node -v`)
-- **npm** w wersji **11.x lub nowszej** (sprawdź poleceniem: `npm -v`)
-- **Git** (zalecana najnowsza wersja)
-- **T-Pot** (zainstalowany i poprawnie działający honeypot)
-- **Klucz API AbuseIPDB** ([kliknij, aby uzyskać](https://www.abuseipdb.com/account/api))
-- **Webhook Discorda** (do powiadomień o atakach i błędach, opcjonalnie)
-- **Dostęp do logów T-Pot** (domyślna lokalizacja: `~/tpotce/data/`)
+> The script automatically skips UDP traffic (in accordance with AbuseIPDB rules) and special-purpose IP addresses (localhost, private, link-local, multicast).
 
 > [!NOTE]
-> Jeśli zostanie osiągnięty dzienny limit API, skrypt automatycznie przełączy się w tryb buforowania i wyśle raport zbiorczy następnego dnia.
+> The repository is actively developed. Feel free to report issues and submit Pull Requests.
 
+## 💬 Support and Community
+Do you have any issues, questions, or just want to receive notifications about important changes and new features?
 
-## 🚀 Instalacja i konfiguracja
-### 1. Instalacja Node.js & Git
-Jeśli nie masz zainstalowanego Node.js, [kliknij tutaj](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649). 
-Jeśli nie masz zainstalowanego Gita, [kliknij tutaj](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada).
+💬 Join my [Discord server](https://discord.gg/S7NDzCzQTg)!  
+🐛 Not using Discord? You can open an [issue on GitHub](https://github.com/sefinek/T-Pot-To-AbuseIPDB/issues)
 
-### 2. Klonowanie repozytorium
+## 📦 System Requirements
+* **Node.js** version **20.x or newer** (check with: `node -v`)
+* **npm** version **11.x or newer** (check with: `npm -v`)
+* **Git** (latest version recommended)
+* **T-Pot** (installed and properly working honeypot)
+* **AbuseIPDB API key** ([click to obtain](https://www.abuseipdb.com/account/api))
+* **Discord webhook** (for attack and error notifications, optional)
+* **Access to T-Pot logs** (default location: `~/tpotce/data/`)
+
+> [!NOTE]
+> If the daily API limit is reached, the script automatically switches to buffering mode and sends a bulk report the next day.
+
+## 🚀 Installation and Configuration
+
+### 1. Installing Node.js & Git
+If you don’t have Node.js installed, [click here](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649).
+If you don’t have Git installed, [click here](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada).
+
+### 2. Cloning the Repository
 ```bash
 git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
 
 > [!IMPORTANT]
-> Flaga `--recurse-submodules` jest wymagana, aby poprawnie pobrać submoduł [sefinek/IPDB-Integration-Scripts](https://github.com/sefinek/IPDB-Integration-Scripts).
+> The `--recurse-submodules` flag is required to properly fetch the [sefinek/IPDB-Integration-Scripts](https://github.com/sefinek/IPDB-Integration-Scripts) submodule.
 
-### 3. Instalacja zależności npm
+### 3. Installing npm Dependencies
 ```bash
 cd T-Pot-To-AbuseIPDB
 npm install
 ```
 
-### 4. Konfiguracja
-Skopiuj domyślny plik konfiguracyjny i dostosuj go do swoich potrzeb:
+### 4. Configuration
+Copy the default configuration file and adjust it to your needs:
 
 ```bash
 cp config.default.js config.js
 ```
 
-Następnie otwórz plik `config.js` w swoim ulubionym edytorze tekstu (np. `mcedit`, `nano`) i skonfiguruj poniższe opcje:
+Then open `config.js` in your favorite text editor (e.g. `mcedit`, `nano`) and configure the options below:
 
-#### 🔑 Wymagane ustawienia
-
+#### 🔑 Required Settings
 > [!IMPORTANT]
-> Musisz uzyskać klucz API z [AbuseIPDB](https://www.abuseipdb.com/account/api). Bez niego skrypt nie będzie działać.
+> You must obtain an API key from [AbuseIPDB](https://www.abuseipdb.com/account/api). Without it, the script will not work.
 
 ```js
-ABUSEIPDB_API_KEY: 'twój-klucz-api' // Uzyskaj z https://www.abuseipdb.com/account/api
+ABUSEIPDB_API_KEY: 'your-api-key' // Obtain from https://www.abuseipdb.com/account/api
 ```
 
-#### 🖥️ Ustawienia serwera
+#### 🖥️ Server Settings
 ```js
-SERVER_ID: 'pl-waw-honeypot', // Identyfikator twojego honeypota (np. 'pl-waw-honeypot', 'home-honeypot')
-EXTENDED_LOGS: false          // Szczegółowe logowanie (może się przydać do debugowania ewentualnych problemów)
+SERVER_ID: 'pl-waw-honeypot', // Your honeypot identifier (e.g. 'pl-waw-honeypot', 'home-honeypot')
+EXTENDED_LOGS: false          // Verbose logging (useful for debugging)
 ```
 
-#### 📁 Ścieżki do logów
-Dostosuj ścieżki, jeśli T-Pot jest zainstalowany w innej lokalizacji:
+#### 📁 Log Paths
+Adjust the paths if T-Pot is installed in a different location:
 
 ```js
 COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
@@ -103,112 +99,112 @@ DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
 HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json'
 ```
 
-#### 🌐 Ustawienia sieci
+#### 🌐 Network Settings
 ```js
-IP_ASSIGNMENT: 'dynamic',             // 'static' lub 'dynamic'
-IP_REFRESH_SCHEDULE: '0 */6 * * *',   // Sprawdzanie IP co 6 godzin
-IPv6_SUPPORT: true                    // true, jeśli twój ISP udostępnia Ci IPv6
+IP_ASSIGNMENT: 'dynamic',             // 'static' or 'dynamic'
+IP_REFRESH_SCHEDULE: '0 */6 * * *',   // IP check every 6 hours
+IPv6_SUPPORT: true                    // true if your ISP provides IPv6
 ```
 
-#### ⏱️ Zarządzanie raportami
+#### ⏱️ Report Management
 ```js
-IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Czas między raportami tego samego IP (domyślnie 6 godzin)
-                                       // UWAGA: Minimum to 15 minut (900000 ms) - wymóg AbuseIPDB
+IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Time between reports for the same IP (default: 6 hours)
+                                       // NOTE: Minimum is 15 minutes (900000 ms) – AbuseIPDB requirement
 ```
 
 > [!IMPORTANT]
-> W przypadku osiągnięcia dziennego limitu raportowania skrypt automatycznie przechodzi w tryb buforowania, 
-> gromadzi nowe adresy IP oraz wysyła je zbiorczo następnego dnia w sposób zgodny z limitami API AbuseIPDB.
+> If the daily reporting limit is reached, the script automatically switches to buffering mode,
+> collects new IP addresses, and submits them in bulk the next day in compliance with AbuseIPDB API limits.
 
-#### 📝 Historia IP (opcjonalnie)
+#### 📝 IP History (Optional)
 ```js
-LOG_IP_HISTORY_ENABLED: false, // Włącz zapisywanie historii
-LOG_IP_HISTORY_DIR: './data'   // Katalog dla historii IP
+LOG_IP_HISTORY_ENABLED: false, // Enable history logging
+LOG_IP_HISTORY_DIR: './data'   // Directory for IP history
 ```
 
-#### 🔔 Discord webhooks (opcjonalnie)
+#### 🔔 Discord Webhooks (Optional)
 ```js
 DISCORD_WEBHOOK_ENABLED: false,
 DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/...',
-DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',  // Nazwa wyświetlana jako autor (użyj 'SERVER_ID' dla automatycznej nazwy)
-DISCORD_USER_ID: 'twój-discord-id'      // Otrzymasz wzmianki (@mention) w ważnych zdarzeniach
+DISCORD_WEBHOOK_USERNAME: 'SERVER_ID', // Display name (use 'SERVER_ID' for automatic naming)
+DISCORD_USER_ID: 'your-discord-id'     // You will receive mentions (@mention) on important events
 ```
 
-**Funkcje Discord:**
-- 📊 **Dzienne podsumowania** - automatycznie generowane statystyki ataków wysyłane codziennie
-- 🚨 **Powiadomienia o błędach** - natychmiastowe alerty o krytycznych problemach
-- ✅ **Potwierdzenia startu** - powiadomienie gdy skrypt uruchomi się pomyślnie
-- 🔄 **Informacje o aktualizacjach** - powiadomienia o nowych wersjach
-- ⚡ **Rate limiting** - max 3 wiadomości co 3 sekundy (ochrona przed banem Discord)
+**Discord Features:**
+* 📊 **Daily summaries** – automatically generated daily attack statistics
+* 🚨 **Error notifications** – instant alerts for critical issues
+* ✅ **Startup confirmations** – notification when the script starts successfully
+* 🔄 **Update notifications** – alerts about new versions
+* ⚡ **Rate limiting** – max 3 messages per 3 seconds (Discord ban protection)
 
-#### 🔄 Automatyczne aktualizacje
+#### 🔄 Automatic Updates
 
 > [!WARNING]
-> Nie są one zalecane ze względu na potencjalne problemy z kompatybilnością. Włącz tę funkcję, tylko jeśli aktywnie monitorujesz serwer i jesteś gotowy na interwencję w przypadku problemów.
+> Not recommended due to potential compatibility issues. Enable only if you actively monitor the server and are ready to intervene if problems occur.
 
 ```js
-AUTO_UPDATE_ENABLED: false,              // Włącz tylko jeśli aktywnie monitorujesz serwer
-AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *' // Harmonogram aktualizacji
+AUTO_UPDATE_ENABLED: false,              // Enable only if you actively monitor the server
+AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *' // Update schedule
 ```
 
-### 5. Pierwsze uruchomienie do testów
+### 5. First Test Run
+
 ```bash
 node .
 ```
 
-#### Uruchomienie w trybie produkcyjnym z PM2
-PM2 to menedżer procesów Node.js, który pozwala na uruchomienie skryptu w tle i automatyczne ponowne uruchomienie w przypadku awarii.
-To repozytorium zawiera już gotową konfigurację ekosystemu PM2, więc nie musisz niczego więcej robić. 😉
+#### Running in Production Mode with PM2
+PM2 is a Node.js process manager that allows the script to run in the background and automatically restart on failure.
+This repository already includes a ready-to-use PM2 ecosystem configuration, so no additional setup is required. 😉
 
-**Instalacja PM2:**
+**Install PM2:**
 ```bash
 npm install pm2 -g
 ```
 
-**Uruchomienie:**
+**Start:**
 ```bash
 pm2 start
 ```
 
 > [!TIP]
-> Skrypt automatycznie wczyta konfigurację z pliku `ecosystem.config.js`.
+> The script automatically loads the configuration from `ecosystem.config.js`.
 
-**Dodanie do autostartu systemu:**
+**Add to system startup:**
 ```bash
 eval "$(pm2 startup | grep sudo)"
 ```
 
-**Przydatne komendy PM2:**
+**Useful PM2 Commands:**
 ```bash
-pm2 logs                   # Wyświetl logi wszystkich procesów w czasie rzeczywistym
-pm2 logs tpot-abuseipdb    # Wyświetl logi tylko tego skryptu
-pm2 list                   # Status wszystkich uruchomionych procesów
-pm2 restart tpot-abuseipdb # Restart skryptu
-pm2 stop tpot-abuseipdb    # Zatrzymaj skrypt
-pm2 delete tpot-abuseipdb  # Usuń skrypt z PM2
-pm2 monit                  # Monitoring procesów w czasie rzeczywistym
-pm2 flush                  # Wyczyść wszystkie logi
+pm2 logs                   # Show logs of all processes in real time
+pm2 logs tpot-abuseipdb    # Show logs only for this script
+pm2 list                   # Status of all running processes
+pm2 restart tpot-abuseipdb # Restart the script
+pm2 stop tpot-abuseipdb    # Stop the script
+pm2 delete tpot-abuseipdb  # Remove the script from PM2
+pm2 monit                  # Real-time process monitoring
+pm2 flush                  # Clear all logs
 ```
 
-### 6. Aktualizacja projektu
-Aby zaktualizować projekt do najnowszej wersji, wykonaj polecenie:
+### 6. Project Update
+To update the project to the latest version, run:
 ```bash
 npm run update
 ```
 
-Skrypt automatycznie:
-- pobierze najnowsze zmiany z repozytorium Git,
-- zaktualizuje submoduły,
-- zaktualizuje wymagane zależności npm,
-- zrestartuje proces PM2.
+The script will automatically:
+* fetch the latest changes from the Git repository,
+* update submodules,
+* update required npm dependencies,
+* restart the PM2 process.
 
-Po tej operacji sprawdź za pomocą `pm2 logs`, czy wszystko działa poprawnie.
+After the update, check `pm2 logs` to ensure everything is working correctly.
 
+## 📊 Example Reports
+Below are examples of reports generated by the script based on different attack types.
 
-## 📊 Przykładowe raporty
-Poniżej znajdziesz przykłady raportów generowanych przez skrypt na podstawie różnych typów ataków.
-
-### Atak brute-force na SSH
+### SSH Brute-Force Attack
 ```text
 Honeypot hit: Brute-force attack detected on 22/SSH
 • Credentials used: support:support, ubnt:ubnt, usario:usario, user:user, admin:admin
@@ -216,22 +212,22 @@ Honeypot hit: Brute-force attack detected on 22/SSH
 • Client: SSH-2.0-libssh_0.11.1
 ```
 
-### Nieautoryzowany ruch sieciowy
+### Unauthorized Network Traffic
 ```text
 Honeypot hit: Unauthorized traffic (243 bytes of payload); 20443 [3] TCP
 ```
 
-### Próba połączenia bez payload (skanowanie)
+### Connection Attempt Without Payload (Scanning)
 ```text
 Honeypot hit: Empty payload (likely service probe); 1028 [1] TCP
 ```
 
-### Próba połączenia TELNET
+### TELNET Connection Attempt
 ```text
 Honeypot hit: Unauthorized connection attempt detected on 23/TELNET
 ```
 
-### Żądanie HTTP
+### HTTP Request
 ```text
 Honeypot hit: HTTP/1.1 request on 8800
 
@@ -241,7 +237,8 @@ Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Encoding: identity; 8800 [2] TCP
 ```
 
-### Próba wykorzystania jako proxy
+### Proxy Abuse Attempt
+
 ```text
 Honeypot hit: HTTP/1.1 request on 13261
 
@@ -249,23 +246,18 @@ CONNECT myip.wtf:443
 User-Agent: Go-http-client/1.1; 13261 [2] TCP
 ```
 
+## 📄 License
+This project is licensed under the GNU General Public License v3.0 – see the [LICENSE](LICENSE) file for details.
 
-## 📄 Licencja
-Ten projekt jest licencjonowany na podstawie licencji GNU General Public License v3.0 - szczegóły w pliku [LICENSE](LICENSE).
+## 👤 Contact
+* Website: [sefinek.net](https://sefinek.net)
+* Email: [contact@sefinek.net](mailto:contact@sefinek.net)
+* GitHub: [@sefinek](https://github.com/sefinek)
 
-
-## 👤 Kontakt
-- Website: [sefinek.net](https://sefinek.net)
-- Email: [contact@sefinek.net](mailto:contact@sefinek.net)
-- GitHub: [@sefinek](https://github.com/sefinek)
-
-
-## ⭐ Podziękowania
-Jeśli ten projekt okazał się dla Ciebie przydatny, rozważ oznaczenie go gwiazdką!
-Zdecydowanie zmotywuje mnie to do jego dalszego rozwoju.
-
+## ⭐ Acknowledgements
+If you found this project useful, consider giving it a star! It will greatly motivate me to continue its development.
 
 ---
 
 > [!CAUTION]
-> Używaj tego narzędzia odpowiedzialnie i zgodnie z warunkami korzystania z AbuseIPDB oraz lokalnymi przepisami prawa.
+> Use this tool responsibly and in accordance with the AbuseIPDB terms of service and local laws.
