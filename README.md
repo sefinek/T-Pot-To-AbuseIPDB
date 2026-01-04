@@ -90,8 +90,8 @@ ABUSEIPDB_API_KEY: 'twój-klucz-api' // Uzyskaj z https://www.abuseipdb.com/acco
 
 #### 🖥️ Ustawienia serwera
 ```javascript
-SERVER_ID: 'pl-waw-honeypot',        // Identyfikator twojego honeypota (np. 'pl-waw-honeypot', 'home-honeypot')
-EXTENDED_LOGS: false,                // Szczegółowe logowanie (może się przydać do debugowania ewentualnych problemów)
+SERVER_ID: 'pl-waw-honeypot', // Identyfikator twojego honeypota (np. 'pl-waw-honeypot', 'home-honeypot')
+EXTENDED_LOGS: false          // Szczegółowe logowanie (może się przydać do debugowania ewentualnych problemów)
 ```
 
 #### 📁 Ścieżki do logów
@@ -100,7 +100,7 @@ Dostosuj ścieżki, jeśli T-Pot jest zainstalowany w innej lokalizacji:
 ```javascript
 COWRIE_LOG_FILE: '~/tpotce/data/cowrie/log/cowrie.json',
 DIONAEA_LOG_FILE: '~/tpotce/data/dionaea/log/dionaea.json',
-HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json',
+HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json'
 ```
 
 #### 🌐 Ustawienia sieci
@@ -122,8 +122,8 @@ IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Czas między raportami tego samego IP 
 
 #### 📝 Historia IP (opcjonalnie)
 ```javascript
-LOG_IP_HISTORY_ENABLED: false,        // Włącz zapisywanie historii
-LOG_IP_HISTORY_DIR: './data'          // Katalog dla historii IP
+LOG_IP_HISTORY_ENABLED: false, // Włącz zapisywanie historii
+LOG_IP_HISTORY_DIR: './data'   // Katalog dla historii IP
 ```
 
 #### 🔔 Discord webhooks (opcjonalnie)
