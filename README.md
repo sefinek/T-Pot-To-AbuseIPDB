@@ -117,12 +117,12 @@ IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000, // Czas między raportami tego samego IP
 ```
 
 > [!IMPORTANT]
-> **Raportowanie zbiorcze:** Gdy osiągniesz dzienny limit raportowania, skrypt automatycznie:
-> 1. Przełączy się w tryb buforowania
-> 2. Zbiera nadchodzące IP-y w pamięci (maksymalnie 100,000)
-> 3. Zapisuje bufor do pliku po każdym dodaniu
-> 4. Następnego dnia (00:01 UTC) automatycznie wysyła wszystkie zebrane IP-y w formacie CSV
-> 5. Bufor jest dzielony na mniejsze pakiety jeśli przekracza limity API
+> Gdy osiągniesz dzienny limit raportowania, skrypt automatycznie:
+> 1. Przełączy się w tryb buforowania.
+> 2. Zbiera nadchodzące IP-y w pamięci (maksymalnie 100,000).
+> 3. Zapisuje bufor do pliku po każdym dodaniu.
+> 4. Następnego dnia (00:01 UTC) automatycznie wysyła wszystkie zebrane IP-y w formacie CSV.
+> 5. Bufor jest dzielony na mniejsze pakiety, jeśli przekracza limity API.
 
 #### 📝 Historia IP (opcjonalnie)
 ```javascript
