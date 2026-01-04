@@ -143,17 +143,15 @@ DISCORD_USER_ID: 'your-discord-id'      // You will receive mentions (@mention) 
 ⚡ **Rate limiting**: max 3 messages per 3 seconds
 
 #### 🔄 Automatic Updates
-
-> [!WARNING]
-> Not recommended due to potential compatibility issues. Enable only if you actively monitor the server and are ready to intervene if problems occur.
-
 ```js
 AUTO_UPDATE_ENABLED: false,               // Enable only if you actively monitor the server
 AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *'  // Update schedule
 ```
 
-### 5. First Test Run
+> [!WARNING]
+> Not recommended due to potential compatibility issues. Enable only if you actively monitor the server and are ready to intervene if problems occur.
 
+### 5. First Test Run
 ```bash
 node .
 ```
