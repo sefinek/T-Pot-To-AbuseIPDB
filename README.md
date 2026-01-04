@@ -87,13 +87,13 @@ Then open `config.js` in your favorite text editor (e.g. `mcedit`, `nano`) and c
 > You must obtain an API key from [AbuseIPDB](https://www.abuseipdb.com/account/api). Without it, the script will not work.
 
 ```js
-ABUSEIPDB_API_KEY: 'your-api-key' // Obtain from https://www.abuseipdb.com/account/api
+ABUSEIPDB_API_KEY: 'your-api-key'  // Obtain from https://www.abuseipdb.com/account/api
 ```
 
 #### 🖥️ Server Settings
 ```js
-SERVER_ID: 'pl-waw-honeypot', // Your honeypot identifier (e.g. 'pl-waw-honeypot', 'home-honeypot')
-EXTENDED_LOGS: false          // Verbose logging (useful for debugging)
+SERVER_ID: 'pl-waw-honeypot',  // Your honeypot identifier (e.g. 'pl-waw-honeypot', 'home-honeypot')
+EXTENDED_LOGS: false           // Verbose logging (useful for debugging)
 ```
 
 #### 📁 Log Paths
@@ -107,9 +107,9 @@ HONEYTRAP_LOG_FILE: '~/tpotce/data/honeytrap/log/attackers.json'
 
 #### 🌐 Network Settings
 ```js
-IP_ASSIGNMENT: 'dynamic',             // 'static' or 'dynamic'
-IP_REFRESH_SCHEDULE: '0 */6 * * *',   // IP check every 6 hours
-IPv6_SUPPORT: true                    // true if your ISP provides IPv6
+IP_ASSIGNMENT: 'dynamic',            // 'static' or 'dynamic'
+IP_REFRESH_SCHEDULE: '0 */6 * * *',  // IP check every 6 hours
+IPv6_SUPPORT: true                   // true if your ISP provides IPv6
 ```
 
 #### ⏱️ Report Management
@@ -124,16 +124,16 @@ IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Time between reports for the same IP (
 
 #### 📝 IP History (Optional)
 ```js
-LOG_IP_HISTORY_ENABLED: false, // Enable history logging
-LOG_IP_HISTORY_DIR: './data'   // Directory for IP history
+LOG_IP_HISTORY_ENABLED: false,  // Enable history logging
+LOG_IP_HISTORY_DIR: './data'    // Directory for IP history
 ```
 
 #### 🔔 Discord Webhooks (Optional)
 ```js
 DISCORD_WEBHOOK_ENABLED: false,
 DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/...',
-DISCORD_WEBHOOK_USERNAME: 'SERVER_ID', // Display name (use 'SERVER_ID' for automatic naming)
-DISCORD_USER_ID: 'your-discord-id'     // You will receive mentions (@mention) on important events
+DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',  // Display name (use 'SERVER_ID' for automatic naming)
+DISCORD_USER_ID: 'your-discord-id'      // You will receive mentions (@mention) on important events
 ```
 
 **Discord Features:**
@@ -149,8 +149,8 @@ DISCORD_USER_ID: 'your-discord-id'     // You will receive mentions (@mention) o
 > Not recommended due to potential compatibility issues. Enable only if you actively monitor the server and are ready to intervene if problems occur.
 
 ```js
-AUTO_UPDATE_ENABLED: false,              // Enable only if you actively monitor the server
-AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *' // Update schedule
+AUTO_UPDATE_ENABLED: false,               // Enable only if you actively monitor the server
+AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *'  // Update schedule
 ```
 
 ### 5. First Test Run
