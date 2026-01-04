@@ -4,7 +4,6 @@
 [![Node.js](https://img.shields.io/github/package-json/engines/node/sefinek/T-Pot-To-AbuseIPDB?logo=node.js&logoColor=white&color=339933)](https://nodejs.org)
 [![Last Commit](https://img.shields.io/github/last-commit/sefinek/T-Pot-To-AbuseIPDB?label=last%20commit)](https://github.com/sefinek/T-Pot-To-AbuseIPDB/commits)
 
-## 📋 Opis
 Automatyczny system raportowania złośliwych aktywności wykrytych przez honeypoty T-Pot do bazy danych AbuseIPDB. Skrypt monitoruje logi z różnych honeypotów, analizuje próby ataków i automatycznie zgłasza złośliwe adresy IP do AbuseIPDB, pomagając w budowaniu globalnej bazy danych zagrożeń cyberbezpieczeństwa.
 
 ### 🎯 Główne funkcje
