@@ -137,11 +137,11 @@ DISCORD_USER_ID: 'your-discord-id'      // You will receive mentions (@mention) 
 ```
 
 **Discord Features:**
-* 📊 **Daily summaries** – automatically generated daily attack statistics
-* 🚨 **Error notifications** – instant alerts for critical issues
-* ✅ **Startup confirmations** – notification when the script starts successfully
-* 🔄 **Update notifications** – alerts about new versions
-* ⚡ **Rate limiting** – max 3 messages per 3 seconds (Discord ban protection)
+* 📊 **Daily summaries**: automatically generated daily attack statistics
+* 🚨 **Error notifications**: instant alerts for critical issues
+* ✅ **Startup confirmations**: notification when the script starts successfully
+* 🔄 **Update notifications**: alerts about new versions
+* ⚡ **Rate limiting**: max 3 messages per 3 seconds (Discord ban protection)
 
 #### 🔄 Automatic Updates
 
