@@ -77,7 +77,7 @@ Skopiuj domyślny plik konfiguracyjny i dostosuj go do swoich potrzeb:
 cp config.default.js config.js
 ```
 
-Następnie edytuj plik `config.js` za pomocą swojego ulubionego edytora (np. mcedit, nano) i skonfiguruj następujące opcje:
+Następnie otwórz plik `config.js` w swoim ulubionym edytorze tekstu (np. `mcedit`, `nano`) i skonfiguruj poniższe opcje:
 
 #### 🔑 Wymagane ustawienia
 
