@@ -5,6 +5,7 @@ const banner = require('./scripts/banners/t-pot.js');
 const { axiosService } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
+const ABUSE_STATE = require('./scripts/services/state.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
 const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
@@ -13,10 +14,8 @@ const resolvePath = require('./scripts/pathResolver.js');
 const config = require('./config.js');
 const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
 
-const ABUSE_STATE = { isLimited: false, isBuffering: false, sentBulk: false, bulkRetryCount: 0 };
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
 const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
-const MAX_BULK_RETRY_ATTEMPTS = 3;
 const MAX_BUFFER_SIZE = 100000;
 
 const nextRateLimitReset = () => {
@@ -34,41 +33,37 @@ const checkRateLimit = async () => {
 		if (now >= RATELIMIT_RESET.getTime()) {
 			ABUSE_STATE.isLimited = false;
 			ABUSE_STATE.isBuffering = false;
-
-			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) {
-				if (ABUSE_STATE.bulkRetryCount < MAX_BULK_RETRY_ATTEMPTS) {
-					ABUSE_STATE.bulkRetryCount++;
-					logger.log(`Attempting bulk report (attempt ${ABUSE_STATE.bulkRetryCount}/${MAX_BULK_RETRY_ATTEMPTS})...`, 1);
-					await sendBulkReport();
-				} else {
-					logger.log(`Maximum bulk retry attempts (${MAX_BULK_RETRY_ATTEMPTS}) reached. Clearing buffer to prevent infinite loop.`, 2, true);
-					BULK_REPORT_BUFFER.clear();
-				}
-			}
-
+			if (!ABUSE_STATE.sentBulk && BULK_REPORT_BUFFER.size > 0) await sendBulkReport();
 			RATELIMIT_RESET = nextRateLimitReset();
 			ABUSE_STATE.sentBulk = false;
-			ABUSE_STATE.bulkRetryCount = 0;
-			logger.log(`Rate limit reset. Next reset scheduled at ${RATELIMIT_RESET.toISOString()}`, 1);
+			logger.success(`Rate limit reset. Next reset scheduled at \`${RATELIMIT_RESET.toISOString()}\`.`, { discord: true });
 		} else if (now - LAST_RATELIMIT_LOG >= RATE_LIMIT_LOG_INTERVAL) {
 			const minutesLeft = Math.ceil((RATELIMIT_RESET.getTime() - now) / 60000);
-			logger.log(`Rate limit is still active. Collected ${BULK_REPORT_BUFFER.size} IPs. Waiting for reset in ${minutesLeft} minute(s) (${RATELIMIT_RESET.toISOString()})`, 1);
+			logger.info(`Rate limit is still active, collected ${BULK_REPORT_BUFFER.size} IPs. Waiting for reset in ${minutesLeft} minute(s) (${RATELIMIT_RESET.toISOString()})...`);
 			LAST_RATELIMIT_LOG = now;
 		}
 	}
 };
 
 const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp }, categories, comment) => {
-	if (!srcIp) return logger.log(`${honeypot} -> Missing source IP (srcIp)`, 3, true);
+	if (!srcIp) return logger.error(`${honeypot} -> Missing source IP (srcIp)`);
 
 	// Check IP
 	const ips = getServerIPs();
-	if (!Array.isArray(ips)) return logger.log(`${honeypot} -> For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`, 3, true);
+	if (!Array.isArray(ips)) return logger.error(`${honeypot} -> For some reason, 'ips' from 'getServerIPs()' is not an array. Received: ${ips}`);
 
-	if (ips.includes(srcIp)) return logger.log(`${honeypot} -> Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 0, EXTENDED_LOGS);
-	if (isSpecialPurposeIP(srcIp)) return logger.log(`${honeypot} -> Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`, 0, EXTENDED_LOGS);
+	if (ips.includes(srcIp)) {
+		if (EXTENDED_LOGS) logger.info(`${honeypot} -> Ignoring own IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`);
+		return;
+	}
+
+	if (isSpecialPurposeIP(srcIp)) {
+		if (EXTENDED_LOGS) logger.info(`${honeypot} -> Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`);
+		return;
+	}
+
 	if (proto === 'UDP') {
-		if (EXTENDED_LOGS) logger.log(`${honeypot} -> Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
+		if (EXTENDED_LOGS) logger.info(`${honeypot} -> Skipping UDP traffic: SRC=${srcIp} DPT=${dpt}`);
 		return;
 	}
 
@@ -81,13 +76,13 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 		// Check buffer size limit to prevent memory overflow
 		if (BULK_REPORT_BUFFER.size >= MAX_BUFFER_SIZE) {
-			logger.log(`${honeypot} -> Buffer full (${MAX_BUFFER_SIZE} IPs). Skipping ${srcIp} to prevent memory overflow.`, 2);
+			logger.warn(`${honeypot} -> Buffer full (${MAX_BUFFER_SIZE} IPs). Skipping ${srcIp} to prevent memory overflow.`);
 			return;
 		}
 
 		BULK_REPORT_BUFFER.set(srcIp, { categories, timestamp, comment });
 		await saveBufferToFile();
-		return logger.log(`${honeypot} -> Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`, 1);
+		return logger.success(`${honeypot} -> Queued ${srcIp} for bulk report (collected ${BULK_REPORT_BUFFER.size} IPs)`);
 	}
 
 	try {
@@ -100,10 +95,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		markIPAsReported(srcIp);
 		await saveReportedIPs();
 
-		logger.log(`${honeypot} -> ✅ Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Abuse: ${res.data.abuseConfidenceScore}%`, 1);
+		logger.success(`${honeypot} -> Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Abuse: ${res.data.abuseConfidenceScore}%`);
 	} catch (err) {
-		const status = err.response?.status ?? 'NO_RESPONSE';
-		const errorCode = err.code ?? 'UNKNOWN_ERROR';
+		const status = err.response?.status;
 
 		if (status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
 			if (!ABUSE_STATE.isLimited) {
@@ -112,23 +106,21 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 				ABUSE_STATE.sentBulk = false;
 				LAST_RATELIMIT_LOG = Date.now();
 				RATELIMIT_RESET = nextRateLimitReset();
-				logger.log(`${honeypot} -> Daily AbuseIPDB limit reached. Buffering reports until ${RATELIMIT_RESET.toLocaleString()}`, 0, true);
+				logger.info(`${honeypot} -> Daily API request limit for specified endpoint reached. Reports will be buffered until \`${RATELIMIT_RESET.toLocaleString()}\`. Bulk report will be sent the following day.`, { discord: true });
 			}
 
 			if (!BULK_REPORT_BUFFER.has(srcIp)) {
 				if (BULK_REPORT_BUFFER.size < MAX_BUFFER_SIZE) {
 					BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
 					await saveBufferToFile();
-					logger.log(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`, 1);
+					logger.success(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`);
 				} else {
-					logger.log(`${honeypot} -> Buffer full (${MAX_BUFFER_SIZE} IPs). Cannot queue ${srcIp}`, 2);
+					logger.warn(`${honeypot} -> Buffer full (${MAX_BUFFER_SIZE} IPs). Cannot queue ${srcIp}`);
 				}
 			}
 		} else {
-			const errorMsg = err.response?.data?.errors
-				? JSON.stringify(err.response.data.errors)
-				: err.message;
-			logger.log(`${honeypot} -> Failed to report ${srcIp} [${dpt}/${proto}] [${status}/${errorCode}]: ${errorMsg}`, status === 429 ? 0 : 3);
+			const failureMsg = `${honeypot} -> Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`;
+			status === 429 ? logger.info(failureMsg) : logger.error(failureMsg);
 		}
 	}
 };
@@ -138,17 +130,17 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	// Validate critical configuration
 	if (!config.MAIN.ABUSEIPDB_API_KEY) {
-		logger.log('FATAL: ABUSEIPDB_API_KEY is required. Set it in config.js or as environment variable.', 3, true);
+		logger.error('FATAL: ABUSEIPDB_API_KEY is required. Set it in config.js or as environment variable.');
 		process.exit(1);
 	}
 
 	if (config.MAIN.IP_REPORT_COOLDOWN < 15 * 60 * 1000) {
-		logger.log('FATAL: IP_REPORT_COOLDOWN must be at least 15 minutes (900000 ms)', 3, true);
+		logger.error('FATAL: IP_REPORT_COOLDOWN must be at least 15 minutes (900000 ms)');
 		process.exit(1);
 	}
 
 	if (config.MAIN.DISCORD_WEBHOOK_ENABLED && !config.MAIN.DISCORD_WEBHOOK_URL) {
-		logger.log('WARNING: DISCORD_WEBHOOK_ENABLED is true but DISCORD_WEBHOOK_URL is not set. Disabling webhooks.', 2, true);
+		logger.warn('DISCORD_WEBHOOK_ENABLED is true but DISCORD_WEBHOOK_URL is not set. Disabling webhooks.');
 		config.MAIN.DISCORD_WEBHOOK_ENABLED = false;
 	}
 
@@ -171,17 +163,17 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 			LOG_IP_HISTORY_DIR: resolvePath(LOG_IP_HISTORY_DIR),
 		};
 
-		logger.log('Development mode: Resolved file paths');
-		logger.log(`  ${validatePath(paths.COWRIE_LOG_FILE)} COWRIE_LOG_FILE:    ${paths.COWRIE_LOG_FILE}`);
-		logger.log(`  ${validatePath(paths.DIONAEA_LOG_FILE)} DIONAEA_LOG_FILE:   ${paths.DIONAEA_LOG_FILE}`);
-		logger.log(`  ${validatePath(paths.HONEYTRAP_LOG_FILE)} HONEYTRAP_LOG_FILE: ${paths.HONEYTRAP_LOG_FILE}`);
-		logger.log(`  ${validatePath(paths.CACHE_FILE)} CACHE_FILE:         ${paths.CACHE_FILE}`);
-		logger.log(`  ${validatePath(paths.LOG_IP_HISTORY_DIR)} LOG_IP_HISTORY_DIR: ${paths.LOG_IP_HISTORY_DIR}`);
+		logger.info('Development mode: Resolved file paths');
+		logger.info(`  ${validatePath(paths.COWRIE_LOG_FILE)} COWRIE_LOG_FILE:    ${paths.COWRIE_LOG_FILE}`);
+		logger.info(`  ${validatePath(paths.DIONAEA_LOG_FILE)} DIONAEA_LOG_FILE:   ${paths.DIONAEA_LOG_FILE}`);
+		logger.info(`  ${validatePath(paths.HONEYTRAP_LOG_FILE)} HONEYTRAP_LOG_FILE: ${paths.HONEYTRAP_LOG_FILE}`);
+		logger.info(`  ${validatePath(paths.CACHE_FILE)} CACHE_FILE:         ${paths.CACHE_FILE}`);
+		logger.info(`  ${validatePath(paths.LOG_IP_HISTORY_DIR)} LOG_IP_HISTORY_DIR: ${paths.LOG_IP_HISTORY_DIR}`);
 	}
 
 	// Auto updates
 	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') {
-		await require('./scripts/services/updates.js');
+		await require('./scripts/services/updates.js')();
 	} else {
 		await require('./scripts/services/version.js');
 	}
@@ -195,7 +187,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	// Bulk
 	await loadBufferFromFile();
 	if (BULK_REPORT_BUFFER.size > 0 && !ABUSE_STATE.isLimited) {
-		logger.log(`Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
+		logger.info(`Found ${BULK_REPORT_BUFFER.size} IPs in buffer after restart. Sending bulk report...`);
 		await sendBulkReport();
 	}
 
@@ -208,7 +200,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	['SIGINT', 'SIGTERM'].forEach(signal => {
 		process.on(signal, async () => {
-			logger.log(`Caught ${signal}! Graceful shutdown started...`, 1, true);
+			logger.info(`Caught ${signal}! Graceful shutdown started...`, { discord: true });
 
 			try {
 				for (const watcher of watchers) {
@@ -217,7 +209,7 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 					if (typeof watcher?.tail?.quit === 'function') await watcher.tail.quit();
 				}
 			} catch (err) {
-				logger.log(`Error during shutdown: ${err.message}`, 3, true);
+				logger.error(`Error during shutdown: ${err.message}`);
 			} finally {
 				process.exit(0);
 			}
@@ -225,11 +217,11 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	});
 
 	process.on('uncaughtException', err => {
-		logger.log(`Uncaught exception: ${err.stack || err.message}`, 3, true);
+		logger.error(`Uncaught exception: ${err.stack || err.message}`);
 	});
 
 	process.on('unhandledRejection', reason => {
-		logger.log(`Unhandled rejection: ${reason}`, 3, true);
+		logger.error(`Unhandled rejection: ${reason}`);
 	});
 
 	// Summaries
