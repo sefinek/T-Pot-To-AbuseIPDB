@@ -1,5 +1,5 @@
-//     Copyright © 2024–2025 Sefinek <contact@sefinek.net>
-//                  https://sefinek.net
+//   Copyright 2024-2026 © by Sefinek. All Rights Reserved.
+//                   https://sefinek.net
 
 const banner = require('./scripts/banners/t-pot.js');
 const { axiosService } = require('./scripts/services/axios.js');
