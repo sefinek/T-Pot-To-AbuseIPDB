@@ -129,11 +129,6 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 	banner();
 
 	// Validate critical configuration
-	if (!config.MAIN.ABUSEIPDB_API_KEY) {
-		logger.error('FATAL: ABUSEIPDB_API_KEY is required. Set it in config.js or as environment variable.');
-		process.exit(1);
-	}
-
 	if (config.MAIN.IP_REPORT_COOLDOWN < 15 * 60 * 1000) {
 		logger.error('FATAL: IP_REPORT_COOLDOWN must be at least 15 minutes (900000 ms)');
 		process.exit(1);
