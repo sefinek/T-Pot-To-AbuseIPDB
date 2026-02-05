@@ -98,7 +98,6 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		logger.success(`${honeypot} -> Reported ${srcIp} [${dpt}/${proto}] | Categories: ${categories} | Abuse: ${res.data.abuseConfidenceScore}%`);
 	} catch (err) {
 		const status = err.response?.status;
-
 		if (status === 429 && JSON.stringify(err.response?.data || {}).includes('Daily rate limit')) {
 			if (!ABUSE_STATE.isLimited) {
 				ABUSE_STATE.isLimited = true;
@@ -110,13 +109,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 			}
 
 			if (!BULK_REPORT_BUFFER.has(srcIp)) {
-				if (BULK_REPORT_BUFFER.size < MAX_BUFFER_SIZE) {
-					BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
-					await saveBufferToFile();
-					logger.success(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`);
-				} else {
-					logger.warn(`${honeypot} -> Buffer overflow (${MAX_BUFFER_SIZE} IPs), unable to queue ${srcIp}`);
-				}
+				BULK_REPORT_BUFFER.set(srcIp, { timestamp, categories, comment });
+				await saveBufferToFile();
+				logger.success(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`);
 			}
 		} else {
 			const failureMsg = `${honeypot} -> Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`;
