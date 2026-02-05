@@ -3,6 +3,7 @@
 [![Version](https://img.shields.io/github/package-json/v/sefinek/T-Pot-To-AbuseIPDB?label=version)](https://github.com/sefinek/T-Pot-To-AbuseIPDB)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Last Commit](https://img.shields.io/github/last-commit/sefinek/T-Pot-To-AbuseIPDB?label=last%20commit)](https://github.com/sefinek/T-Pot-To-AbuseIPDB/commits)
+[![Stars](https://img.shields.io/github/stars/sefinek/T-Pot-To-AbuseIPDB)](https://github.com/sefinek/T-Pot-To-AbuseIPDB/stargazers)
 
 Integration with AbuseIPDB that enables automatic reporting of malicious activity detected by T-Pot honeypots.
 The script monitors logs, analyzes attack attempts, and reports them automatically.
