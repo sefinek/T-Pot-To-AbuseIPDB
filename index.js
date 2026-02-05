@@ -6,6 +6,7 @@ const { axiosService } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const ABUSE_STATE = require('./scripts/services/state.js');
+const ipSanitizer = require('./scripts/ipSanitizer.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
 const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
@@ -46,6 +47,7 @@ const checkRateLimit = async () => {
 };
 
 const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp }, categories, comment) => {
+	comment = `${ipSanitizer(comment)}\nReported by: ${repoUrl}`;
 	if (!srcIp) return logger.error(`${honeypot} -> Missing source IP (srcIp)`);
 
 	// Check IP
