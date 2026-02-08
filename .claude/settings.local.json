@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(git submodule status:*)",
+      "Bash(move \"D:\\\\Projects\\\\security\\\\update-submodules.bat\" \"D:\\\\Projects\\\\security\\\\update-submodules.cmd\")",
+      "Bash(cmd /c move \"D:\\\\Projects\\\\security\\\\update-submodules.bat\" \"D:\\\\Projects\\\\security\\\\update-submodules.cmd\")",
+      "Bash(cmd /c \"if exist D:\\\\Projects\\\\sniffcat\\\\Cloudflare-WAF-To-SniffCat\\\\scripts\\\\.git \\(echo OK\\) else \\(echo NOT FOUND\\)\")"
+    ]
+  }
+}
