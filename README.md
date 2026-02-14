@@ -42,9 +42,9 @@ Do you have any issues, questions, or just want to receive notifications about i
 
 
 ## 📦 System Requirements
-* **Node.js** version **20.x or newer** (check with: `node -v`)
+* **[Node.js](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649)** version **20.x or newer** (check with: `node -v`)
 * **npm** version **10.x or newer** (check with: `npm -v`)
-* **Git** (latest version recommended)
+* **[Git](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada)** (latest version recommended)
 * **T-Pot** (installed and properly working honeypot)
 * **AbuseIPDB API key** ([click to obtain](https://www.abuseipdb.com/account/api))
 * **Discord webhook** (for attack and error notifications, optional)
@@ -56,11 +56,7 @@ Do you have any issues, questions, or just want to receive notifications about i
 
 ## 🚀 Installation and Configuration
 
-### 1. Installing Node.js & Git
-If you don't have Node.js installed, [click here](https://gist.github.com/sefinek/fb50041a5f456321d58104bbf3f6e649).
-If you don't have Git installed, [click here](https://gist.github.com/sefinek/1de50073ffbbae82fc901506304f0ada).
-
-### 2. Cloning the Repository
+### 1. Cloning the Repository
 ```bash
 git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 ```
@@ -68,13 +64,13 @@ git clone --recurse-submodules https://github.com/sefinek/T-Pot-To-AbuseIPDB.git
 > [!IMPORTANT]
 > The `--recurse-submodules` flag is required to properly fetch the [sefinek/IPDB-Integration-Scripts](https://github.com/sefinek/IPDB-Integration-Scripts) submodule.
 
-### 3. Installing npm Dependencies
+### 2. Installing npm Dependencies
 ```bash
 cd T-Pot-To-AbuseIPDB
 npm install
 ```
 
-### 4. Configuration
+### 3. Configuration
 Copy the default configuration file and adjust it to your needs:
 
 ```bash
