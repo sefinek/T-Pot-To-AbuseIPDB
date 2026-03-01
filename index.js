@@ -12,6 +12,7 @@ const ipSanitizer = require('./scripts/ipSanitizer.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
 const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
+const { initWhitelist, isWhitelisted } = require('./scripts/services/whitelist.js');
 const logger = require('./scripts/logger.js');
 const resolvePath = require('./scripts/pathResolver.js');
 const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
@@ -60,8 +61,14 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		return;
 	}
 
-	if (isSpecialPurposeIP(srcIp)) {
-		if (EXTENDED_LOGS) logger.info(`${honeypot} -> Ignoring local IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`);
+	if (isWhitelisted(srcIp)) {
+		if (EXTENDED_LOGS) logger.info(`${honeypot} -> Ignoring whitelisted IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`);
+		return;
+	}
+
+	const specialIP = isSpecialPurposeIP(srcIp);
+	if (specialIP.is) {
+		if (EXTENDED_LOGS) logger.info(`${honeypot} -> Ignoring ${specialIP.range} IP address: PROTO=${proto?.toLowerCase()} SRC=${srcIp} DPT=${dpt}`);
 		return;
 	}
 
@@ -167,6 +174,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	// Fetch IPs
 	await refreshServerIPs();
+
+	// Whitelist
+	initWhitelist();
 
 	// Load cache
 	await loadReportedIPs();

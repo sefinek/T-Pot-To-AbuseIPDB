@@ -19,7 +19,8 @@ If you found this project useful, consider giving it a star! It will greatly mot
 ✅ Protection mechanisms against buffer overflow and data loss.  
 ✅ Automatic retry of failed API requests.  
 ✅ Full support for **IPv4** and **IPv6** addresses.  
-✅ Automatic skipping of **UDP** traffic and special-purpose IP addresses (`local`, `private`, `multicast`).  
+✅ Automatic skipping of **UDP** traffic and special-purpose IP addresses (`local`, `private`, `multicast`).
+✅ **IP Whitelist** – Maintain a `whitelist.txt` file with IPs that should never be reported (e.g., your home IP when running on a VPS). The file is watched for changes and reloaded automatically.
 ✅ Optional **Discord** notifications with attack alerts and daily statistics.  
 ✅ Optional logging of IP activity history to files.  
 ✅ Automatic project updates via **Git** using a **cron** schedule.  
