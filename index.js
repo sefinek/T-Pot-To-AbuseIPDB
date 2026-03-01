@@ -1,6 +1,8 @@
 //   Copyright 2024-2026 © by Sefinek. All Rights Reserved.
 //                   https://sefinek.net
 
+const config = require('./config.js');
+require('./scripts/validations/index.js')(config.MAIN);
 const banner = require('./scripts/banners/t-pot.js');
 const { axiosService } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
@@ -12,7 +14,6 @@ const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const logger = require('./scripts/logger.js');
 const resolvePath = require('./scripts/pathResolver.js');
-const config = require('./config.js');
 const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
 
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
@@ -125,12 +126,6 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 (async () => {
 	banner();
 
-	// Validate critical configuration
-	if (config.MAIN.IP_REPORT_COOLDOWN < 15 * 60 * 1000) {
-		logger.error('FATAL: IP_REPORT_COOLDOWN must be at least 15 minutes (900000 ms)');
-		process.exit(1);
-	}
-
 	if (config.MAIN.DISCORD_WEBHOOK_ENABLED && !config.MAIN.DISCORD_WEBHOOK_URL) {
 		logger.warn('DISCORD_WEBHOOK_ENABLED is true but DISCORD_WEBHOOK_URL is not set. Disabling webhooks.');
 		config.MAIN.DISCORD_WEBHOOK_ENABLED = false;
@@ -198,7 +193,6 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 				for (const watcher of watchers) {
 					if (typeof watcher?.flush === 'function') await watcher.flush();
 					if (typeof watcher?.cleanup === 'function') watcher.cleanup();
-					if (typeof watcher?.tail?.quit === 'function') await watcher.tail.quit();
 				}
 			} catch (err) {
 				logger.error(`Error during shutdown: ${err.message}`);
