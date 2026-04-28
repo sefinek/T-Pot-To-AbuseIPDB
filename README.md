@@ -13,7 +13,7 @@ If you found this project useful, consider giving it a star! It will greatly mot
 
 ## 🎯 Key Features
 ✅ Support for **Cowrie**, **Dionaea**, and **Honeytrap** honeypots (more planned).  
-✅ Reporting mechanism with a minimum **15-minute cooldown** period that prevents multiple reports of the same IP address within that time.  
+✅ Reporting mechanism with a minimum **15-minute cooldown**, preventing multiple reports of the same IP address.  
 ✅ Automatic assignment of abuse categories based on the detected attack type.  
 ✅ Full support for bulk reporting when API limits are reached.  
 ✅ Protection mechanisms against buffer overflow and data loss.  
