@@ -142,8 +142,8 @@ DISCORD_USER_ID: 'your-discord-id'     // You will receive mentions (@mention) o
 
 #### 🔄 Automatic Updates
 ```js
-AUTO_UPDATE_ENABLED: false,               // Enable only if you actively monitor the server
-AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *'  // Update schedule
+AUTO_UPDATE_ENABLED: false,              // Enable only if you actively monitor the server
+AUTO_UPDATE_SCHEDULE: '0 14,16,20 * * *' // Update schedule
 ```
 
 > [!WARNING]
