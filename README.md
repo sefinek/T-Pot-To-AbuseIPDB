@@ -90,8 +90,8 @@ ABUSEIPDB_API_KEY: 'your-api-key'  // Obtain from https://www.abuseipdb.com/acco
 
 #### 🖥️ Server Settings
 ```js
-SERVER_ID: 'pl-waw-honeypot',  // Your honeypot identifier (e.g. 'pl-waw-honeypot', 'home-honeypot')
-EXTENDED_LOGS: false           // Verbose logging (useful for debugging)
+SERVER_ID: 'example', // Your honeypot identifier (e.g. 'pl-waw-honeypot', 'home-honeypot')
+EXTENDED_LOGS: false  // Verbose logging (useful for debugging)
 ```
 
 #### 📁 Log Paths
