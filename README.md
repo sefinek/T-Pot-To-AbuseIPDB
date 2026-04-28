@@ -82,7 +82,7 @@ Then open `config.js` in your favorite text editor (e.g. `mcedit`, `nano`) and c
 
 #### 🔑 Required Settings
 > [!IMPORTANT]
-> You must obtain an API key from [AbuseIPDB](https://www.abuseipdb.com/account/api). Without it, the script will not work.
+> You must obtain an API key from [AbuseIPDB](https://www.abuseipdb.com/account/api).
 
 ```js
 ABUSEIPDB_API_KEY: 'your-api-key'  // Obtain from https://www.abuseipdb.com/account/api
