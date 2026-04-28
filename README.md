@@ -8,7 +8,7 @@
 Integration with AbuseIPDB that enables automatic reporting of malicious activity detected by T-Pot honeypots.
 The script monitors logs, analyzes attack attempts, and reports them automatically.
 
-If you found this project useful, consider giving it a star! It will greatly motivate me to continue its development.
+⭐ If you found this project useful, consider giving it a star! It will greatly motivate me to continue its development.
 
 
 ## 🎯 Key Features
