@@ -122,16 +122,16 @@ IP_REPORT_COOLDOWN: 6 * 60 * 60 * 1000 // Time between reports for the same IP (
 
 #### 📝 IP History (Optional)
 ```js
-LOG_IP_HISTORY_ENABLED: false,  // Enable history logging
-LOG_IP_HISTORY_DIR: './data'    // Directory for IP history
+LOG_IP_HISTORY_ENABLED: false, // Enable history logging
+LOG_IP_HISTORY_DIR: './data'   // Directory for IP history
 ```
 
 #### 🔔 Discord Webhooks (Optional)
 ```js
 DISCORD_WEBHOOK_ENABLED: false,
 DISCORD_WEBHOOK_URL: 'https://discord.com/api/webhooks/...',
-DISCORD_WEBHOOK_USERNAME: 'SERVER_ID',  // Display name (use 'SERVER_ID' for automatic naming)
-DISCORD_USER_ID: 'your-discord-id'      // You will receive mentions (@mention) on important events
+DISCORD_WEBHOOK_USERNAME: 'SERVER_ID', // Display name (use 'SERVER_ID' for automatic naming)
+DISCORD_USER_ID: 'your-discord-id'     // You will receive mentions (@mention) on important events
 ```
 
 📊 **Daily summaries**: automatically generated daily attack statistics  
