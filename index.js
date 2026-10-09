@@ -9,6 +9,7 @@ const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const ABUSE_STATE = require('./scripts/services/state.js');
 const ipSanitizer = require('./scripts/ipSanitizer.js');
+const { MAX_COMMENT_LENGTH, truncateComment } = require('./scripts/comment.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
 const { repoSlug, repoUrl } = require('./scripts/repo.js');
 const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
@@ -20,6 +21,7 @@ const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DIS
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
 const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
 const MAX_BUFFER_SIZE = 100000;
+const COMMENT_FOOTER = `\nReported by: ${repoUrl}`;
 
 const nextRateLimitReset = () => {
 	const now = new Date();
@@ -49,7 +51,7 @@ const checkRateLimit = async () => {
 };
 
 const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp }, categories, comment) => {
-	comment = `${ipSanitizer(comment)}\nReported by: ${repoUrl}`;
+	comment = truncateComment(ipSanitizer(comment), MAX_COMMENT_LENGTH - COMMENT_FOOTER.length) + COMMENT_FOOTER;
 	if (!srcIp) return logger.error(`${honeypot} -> Missing source IP (srcIp)`);
 
 	// Check IP
@@ -124,6 +126,12 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 				logger.success(`${honeypot} -> Queued ${srcIp} for bulk report due to rate limit`);
 			}
 		} else {
+			// The same payload would be rejected again, so put the IP on cooldown instead of retrying it on every flush
+			if (status === 422) {
+				markIPAsReported(srcIp);
+				await saveReportedIPs();
+			}
+
 			const failureMsg = `${honeypot} -> Failed to report ${srcIp} [${dpt}/${proto}]; ${err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message}`;
 			status === 429 ? logger.info(failureMsg) : logger.error(failureMsg);
 		}
