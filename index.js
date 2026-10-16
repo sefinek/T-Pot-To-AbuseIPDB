@@ -8,14 +8,14 @@ const { axiosService } = require('./scripts/services/axios.js');
 const { saveBufferToFile, loadBufferFromFile, sendBulkReport, BULK_REPORT_BUFFER } = require('./scripts/services/bulk.js');
 const { loadReportedIPs, saveReportedIPs, isIPReportedRecently, markIPAsReported } = require('./scripts/services/cache.js');
 const ABUSE_STATE = require('./scripts/services/state.js');
-const ipSanitizer = require('./scripts/ipSanitizer.js');
-const { MAX_COMMENT_LENGTH, truncateComment } = require('./scripts/comment.js');
+const ipSanitizer = require('./scripts/ip/ipSanitizer.js');
+const { MAX_COMMENT_LENGTH, truncateComment } = require('./scripts/reporting/comment.js');
 const { refreshServerIPs, getServerIPs } = require('./scripts/services/ipFetcher.js');
-const { repoSlug, repoUrl } = require('./scripts/repo.js');
-const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
+const { repoSlug, repoUrl } = require('./scripts/core/repo.js');
+const isSpecialPurposeIP = require('./scripts/ip/isSpecialPurposeIP.js');
 const { initWhitelist, isWhitelisted } = require('./scripts/services/whitelist.js');
-const logger = require('./scripts/logger.js');
-const resolvePath = require('./scripts/pathResolver.js');
+const logger = require('./scripts/core/logger.js');
+const resolvePath = require('./scripts/core/pathResolver.js');
 const { SERVER_ID, EXTENDED_LOGS, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
 
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
@@ -194,9 +194,9 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 
 	// Watch
 	const watchers = [
-		require('./scripts/honeypots/dionaea.js')(reportIp),
-		require('./scripts/honeypots/honeytrap.js')(reportIp),
-		require('./scripts/honeypots/cowrie.js')(reportIp),
+		require('./scripts/integrations/honeypots/dionaea.js')(reportIp),
+		require('./scripts/integrations/honeypots/honeytrap.js')(reportIp),
+		require('./scripts/integrations/honeypots/cowrie.js')(reportIp),
 	];
 
 	['SIGINT', 'SIGTERM'].forEach(signal => {
