@@ -16,7 +16,7 @@ const isSpecialPurposeIP = require('./scripts/isSpecialPurposeIP.js');
 const { initWhitelist, isWhitelisted } = require('./scripts/services/whitelist.js');
 const logger = require('./scripts/logger.js');
 const resolvePath = require('./scripts/pathResolver.js');
-const { SERVER_ID, EXTENDED_LOGS, AUTO_UPDATE_ENABLED, AUTO_UPDATE_SCHEDULE, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
+const { SERVER_ID, EXTENDED_LOGS, DISCORD_WEBHOOK_ENABLED, DISCORD_WEBHOOK_URL, COWRIE_LOG_FILE, DIONAEA_LOG_FILE, HONEYTRAP_LOG_FILE, CACHE_FILE, LOG_IP_HISTORY_DIR } = config.MAIN;
 
 const RATE_LIMIT_LOG_INTERVAL = 10 * 60 * 1000;
 const BUFFER_STATS_INTERVAL = 5 * 60 * 1000;
@@ -173,12 +173,8 @@ const reportIp = async (honeypot, { srcIp, dpt = 'N/A', proto = 'N/A', timestamp
 		logger.info(`  ${validatePath(paths.LOG_IP_HISTORY_DIR)} LOG_IP_HISTORY_DIR: ${paths.LOG_IP_HISTORY_DIR}`);
 	}
 
-	// Auto updates
-	if (AUTO_UPDATE_ENABLED && AUTO_UPDATE_SCHEDULE && SERVER_ID !== 'development') {
-		await require('./scripts/services/updates.js')();
-	} else {
-		await require('./scripts/services/version.js');
-	}
+	// Version check
+	require('./scripts/services/version.js');
 
 	// Fetch IPs
 	await refreshServerIPs();
